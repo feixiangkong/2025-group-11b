@@ -14,7 +14,9 @@ Include a demo video of your game here (you don't have to wait until the end, yo
 <p align="center">
   <img src="https://github.com/feixiangkong/picx-images-hosting/raw/master/20250508/photo.8dx31qeqg8.webp" width="200" style="max-height:400px; height:auto;"><br>
 </p>
-
+<p align="center">
+  <img src="https://github.com/feixiangkong/2025-group-11b/blob/main/yang%20yang.jpg" width="200" style="max-height:400px; height:auto;"><br>
+</p>
 
 - Group member 1, yangyang, df24465@bristol.ac.uk, role
 - Group member 2, Siyuan Chen, gd23774@bristol.ac.uk, developer & product owner & video designer & writer & scrum master
