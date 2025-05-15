@@ -352,8 +352,9 @@ button:hover {
 }
 
 
+
 .button-resume{
-  background-image: url('../images/ui/bg_button_resume.png');
+  background-image: url('https://github.com/feixiangkong/picx-images-hosting/raw/master/bg_button_resume.6pnqe06o4o.webp');
   background-color: rgba(255, 255, 255, 0);
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -372,7 +373,7 @@ button:hover {
 }
 
 .button-pause{
-  background-image: url('../images/ui/bg_button_pause.png');
+  background-image: url('https://github.com/feixiangkong/picx-images-hosting/raw/master/bg_button_pause.1zihflf1re.webp');
   background-color: rgba(255, 255, 255, 0);
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -395,7 +396,7 @@ button:hover {
 }
 
 .button-reset{
-  background-image: url('../images/ui/bg_button_reset.png');
+  background-image: url('https://github.com/feixiangkong/picx-images-hosting/raw/master/bg_button_reset.969ysxdk19.webp');
   background-color: rgba(255, 255, 255, 0);
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -414,7 +415,7 @@ button:hover {
 }
 
 .button-quit{
-  background-image: url('../images/ui/bg_button_quit.png');
+  background-image: url('https://github.com/feixiangkong/picx-images-hosting/raw/master/bg_button_quit.1sf9k5swbw.webp');
   background-color: rgba(255, 255, 255, 0);
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -433,7 +434,7 @@ button:hover {
 }
 
 .button-speed{
-  background-image: url('../images/ui/bg_button_speed.png');
+  background-image: url('https://github.com/feixiangkong/picx-images-hosting/raw/master/bg_button_speed.6m44gafk4s.webp');
   background-color: rgba(255, 255, 255, 0);
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -447,6 +448,24 @@ button:hover {
   transition: transform 0.2s ease;
 }
 .button-speed:hover {
+  opacity: 0.9;  /* 悬停时稍微透明 */
+  transform: scale(1.1);  /* 悬停时稍微变大 */
+}
+
+.button-break{
+  background-image: url('https://github.com/feixiangkong/picx-images-hosting/raw/master/bg_button_reset.969ysxdk19.webp');
+  background-color: rgba(255, 255, 255, 0);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
+  color: white;
+  padding: 0.74vh 0.73vw;
+  text-align: center;
+  font-family: 'UIFont', sans-serif;
+  font-size: 2vw;
+  cursor: pointer;
+}
+.button-break:hover {
   opacity: 0.9;  /* 悬停时稍微透明 */
   transform: scale(1.1);  /* 悬停时稍微变大 */
 }
