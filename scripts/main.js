@@ -1,94 +1,87 @@
-// 初始默认生命值和金钱
-const defaultHealth = 100;
-const defaultCash = 1000;
+// Initial default health and money
+let defaultHealth = 1;
+let defaultCash = 100;
 
-let mapData = maps.customMap;  // 获取自定义地图数据
+let mapData = maps.customMap; // Get custom map data
 
+let debugMap = false; // Whether to display the debug map
+let enableShakeEffect = true; // Whether to enable screen vibration
+let enableHeartbeatEffect = true; // Whether to enable the heartbeat effect
 
-let debugMap = false;  // 是否显示调试地图
-let enableShakeEffect = true;   // 是否开启画面震动
-let enableHeartbeatEffect = true;   // 是否开启心跳效果
+// Opening remarks to start the game
+var isStartGame = false; // Whether the game has started
 
-// 开场白开始游戏
-var isStartGame = false;  // 游戏是否开始
+var monsters = []; // Array for storing monsters
+var projectiles = []; // Array for storing projectiles
+var systems = []; // Array for storing systems
+var towers = []; // Array for storing towers
+var newMonsters = []; // Array for storing new monsters
+var newProjectiles = []; // Array for storing new projectiles
+var newTowers = []; // Array for storing new towers
+var vfx = []; // Array for storing visual effects
 
-var monsters = [];  // 存放怪物的数组
-var projectiles = [];  // 存放投射物的数组
-var systems = [];  // 存放系统的数组
-var towers = [];  // 存放塔的数组
-var newMonsters = [];  // 存放新怪物的数组
-var newProjectiles = [];  // 存放新投射物的数组
-var newTowers = [];  // 存放新塔的数组
-var vfx = [];   // 存放视觉效果的数组
+var cols = 12; // Number of columns in the map
+var rows = 8; // Number of rows in the map
+var tileZoom = 2; // Zoom factor of the tile
+var ts = 110; // Cell size
+var zoomDefault = ts; // Default tile size
+var particleAmt = 32; // Number of particles drawn per explosion
+var custom; // JSON data for custom maps
+var display; // Graphics display tile
+var displayDir; // Direction of display tile
+// (0 = no direction, 1 = left, 2 = up, 3 = right, 4 = down)
+var dists = buildArray(12, 8, null); // Create an array with 12 columns and 8 rows, with a default value of null
+// Distance to the exit
+var grid; // Tile type
+// (0 = empty, 1 = wall, 2 = path, 3 = tower,
+// 4 = Only monster walking path)
+var metadata; // Tile metadata
+var paths; // Path direction to the exit
+var visitMap; // Can you reach the exit?
+var walkMap; // Walkable map
 
-var cols = 12;  // 地图的列数
-var rows = 8;  // 地图的行数
-var tileZoom = 2;  // 瓦片的缩放倍率
-var ts = 110;  // 单元格大小
+var exit; // Exit
+var spawnpoints = []; // Monster spawn point
+var tempSpawns = []; // Temporary spawn point
 
-var zoomDefault = ts;  // 默认的瓦片大小
+var cash; // Current money
+var health; // Current health
+let prevHealth = 0; // Health value in the previous frame
+var maxHealth; // Maximum health value
+var wave; // Current wave
+var totalWaves = 2; // Each level has a fixed total of 2 waves
 
-var particleAmt = 32;  // 每次爆炸绘制的粒子数量
+var spawnCool; // Cooldown time for monster spawning
 
-var custom;  // 自定义地图的JSON数据
-var display;  // 图形显示瓦片
-var displayDir;  // 显示瓦片的方向
-// (0 = 无方向, 1 = 左, 2 = 上, 3 = 右, 4 = 下)
-var dists = buildArray(12, 8, null);  // 创建一个12列8行的数组，默认值为null
-// 到出口的距离
-var grid;  // 瓦片类型
-// (0 = 空, 1 = 墙, 2 = 路径, 3 = 塔,
-// 4 = 仅怪物行走路径)
-var metadata;  // 瓦片元数据
-var paths;  // 到出口的路径方向
-var visitMap;  // 是否可以到达出口
-var walkMap;  // 可行走地图
+var bg; // Background color
 
-var exit;  // 出口
-var spawnpoints = [];  // 怪物的生成点
-var tempSpawns = [];  // 临时生成点
+var selected; // Currently selected object
+var towerType; // Current tower type
 
-var cash;  // 当前的金钱
-var health;  // 当前的生命值
-let prevHealth = 0; // 上一帧生命值
-var maxHealth;  // 最大生命值
-var wave;  // 当前波次
+var sounds; // Dictionary of all sound effects
 
-var spawnCool;  // 怪物生成的冷却时间
+var paused; // Is the game paused?
+var randomWaves = true; // Whether to use random waves
+var scd; // Countdown to the next monster spawn
+var skipToNext = false; // Whether to skip the current wave and start the next wave directly
+var toCooldown; // Flag for resetting the spawn cooldown
+var toPathfind; // Flag for updating monster pathfinding
+var toPlace; // Flag for placing towers
+var toWait; // Flag for waiting for the next wave
+var wcd; // Countdown to the next wave
+var minDist = 15; // Minimum distance between the spawn point and the exit
+var resistance = 0.5; // Damage resistance percentage
+var sellConst = 0.8; // Ratio of the tower selling price to the purchase price
+var waveCool = 120; // Cooldown between waves (unit: ticks)
+var weakness = 0.5; // Increased percentage of damage caused by weaknesses
+var gameEnded = false; // Flag for whether the game is over
+var resultRating = 0; // Level settlement score (0~3 stars)
+var monsterSpeedMultiplier = 1; // Monster speed multiplier, default 1x speed
 
-var bg;  // 背景色
+let bgm; // Background music
 
-var selected;  // 当前选中的对象
-var towerType;  // 当前塔的类型
-
-var sounds;  // 所有音效的字典
-
-var paused;  // 游戏是否暂停
-var randomWaves = true;  // 是否使用随机波次
-var scd;  // 下一次生成怪物的倒计时
-var skipToNext = false;  // 是否跳过当前波次直接开始下一波
-var toCooldown;  // 用于重置生成冷却时间的标志
-var toPathfind;  // 用于更新怪物寻路的标志
-var toPlace;  // 用于放置塔的标志
-var toWait;  // 用于等待下一波的标志
-var wcd;  // 下一波的倒计时
-
-var minDist = 15;  // 生成点和出口的最小距离
-var resistance = 0.5;  // 伤害抵抗百分比
-var sellConst = 0.8;  // 塔出售价格与购买价格的比例
-var waveCool = 120;  // 波次之间的冷却时间（单位：ticks）
-var weakness = 0.5;  // 弱点造成的伤害增加百分比
-
-var totalWaves = 10;  // 每一关固定总波数为2波
-var gameEnded = false;  // 游戏是否结束的标志
-var resultRating = 0;   // 关卡结算分（0~3 星）
-
-var monsterSpeedMultiplier = 1;  // 怪物的速度倍率，默认1倍速度
-
-let bgm;    // 背景音乐
-
-// 创建Tooltip对象
-let tooltip;  // 创建一个提示工具对象
+// Create Tooltip object
+let tooltip; // Create a tooltip object
 
 let cnvs;
 let towerY;
@@ -101,21 +94,19 @@ let gameHeight;
 let gameY;
 let gameX;
 
-
 let towerTipPaneHeight;
 
 let leftArrowBtn, rightArrowBtn;
-let pages = []; // 用来存储多组按钮
-let currentPage = 0; // 当前显示的页面
-
+let pages = []; // Used to store multiple groups of buttons
+let currentPage = 0; // Currently displayed page
 
 let pageWidth;
 let pageX;
 let arrowButtonWidth;
 let pageHeight;
 
-
 let towerInfoPane;
+let diffcultyLevel;
 
 
 // Misc functions
@@ -132,6 +123,7 @@ function addGroup(group) {
 
 // Prepare a wave
 function addWave(pattern) {
+    if (!pattern) return; 
     spawnCool = pattern.shift();
     curWaveMonstersInfo = JSON.parse(JSON.stringify(pattern));
     calculateMonsterTotalNumber();
@@ -142,7 +134,7 @@ function addWave(pattern) {
 
 // 购买并放置防御塔（当玩家资金充足时）
 function buy(t) {
-    const { x, y } = t.gridPos || {};
+    const {x, y} = t.gridPos || {};
     const canPlaceHere = typeof x !== 'undefined' && typeof y !== 'undefined' && canPlace(x, y);
 
     if (t && canPlaceHere && cash >= t.cost) {
@@ -159,9 +151,9 @@ function buy(t) {
         newTowers.push(t);
         grid[x][y] = 3;
 
-        console.log("[buy] 成功放置塔", t);
+        console.log("[buy] Successfully placed tower", t);
     } else {
-        console.warn("[buy] 放置失败，条件不足", {
+        console.warn("[buy] placement failed, insufficient conditions", {
             tower: t,
             canPlaceHere,
             hasCash: cash >= (t?.cost || 0),
@@ -171,12 +163,9 @@ function buy(t) {
 }
 
 
-
-
-
 function canPlace(col, row) {
     if (!toPlace) return false;
-    // 检查 grid 是否存在以及索引是否在有效范围内
+    // Check if the grid exists and the index is in the valid range
     if (!grid || !grid[col] || typeof grid[col][row] === 'undefined') {
         return false;
     }
@@ -285,60 +274,52 @@ function isWave(min, max) {
 // Load map from template
 // Always have an exit and spawnpoints if you do not have a premade grid
 function loadMap(mapID) {
-//     // 优先使用隐藏的 #map（初始选关时由 start 按钮设置），否则退回到 #initial-map
-//     var mapElement = document.getElementById('map') || document.getElementById('initial-map');
-
-// // 获取地图名称
-//     var name = mapElement.value;
 
 
-// 获取地图数据
+// Get the map data
     var m = maps[mapID];
     mapData = m;
     console.log(mapID);
-    // 地图
+// Map
     if (mapID == "customMap") bgImg = levelMapsImage[0];
     else if (mapID == "map2") bgImg = levelMapsImage[1];
     else if (mapID == "map3") bgImg = levelMapsImage[2];
-    console.log(`获取地图数据${m}`);
+    console.log(`Get map data${m}`);
 
-// 复制地图显示层数据
+// Copy map display layer data
     display = copyArray(m.display);
 
-// 复制地图方向数据
+// Copy map direction data
     displayDir = copyArray(m.displayDir);
 
-// 复制地图网格数据
+// Copy map grid data
     grid = copyArray(m.grid);
 
-// 复制地图元数据
+// Copy map metadata
     metadata = copyArray(m.metadata);
 
-// 设置出口位置
+// Set exit location
     exit = createVector(m.exit[0], m.exit[1]);
 
-// 初始化出生点数组
+// Initialize spawn point array
     spawnpoints = [];
 
-// 复制出生点数据
+// Copy spawn point data
     for (var i = 0; i < m.spawnpoints.length; i++) {
         var s = m.spawnpoints[i];
         spawnpoints.push(createVector(s[0], s[1]));
     }
 
-// 设置地图背景颜色
+// Set the map background color
     bg = m.bg;
 
-// 设置地图列数
+// Set the number of map columns
     cols = m.cols;
 
-// 设置地图行数
+// Set the number of map rows
     rows = m.rows;
 
-// 调整画布适应窗口
-//     resizeFit();
-
-// 初始化临时出生点数组
+// Initialize the temporary spawn point array
     tempSpawns = [];
 
 }
@@ -346,10 +327,9 @@ function loadMap(mapID) {
 
 // Increment wave counter and prepare wave
 function nextWave() {
-    //isStartGame = false;
-// 根据游戏模式添加敌人波次（随机生成或使用自定义配置）
+// Add enemy waves according to the game mode (randomly generate or use custom configuration)
     addWave(randomWaves ? randomWave() : customWave());
-// 条件运算符决定波次生成策略：当randomWaves为true时调用随机生成函数，否则调用自定义配置函数
+// The conditional operator determines the wave generation strategy: when randomWaves is true, call the random generation function, otherwise call the custom configuration function
     wave++;
 }
 
@@ -369,74 +349,97 @@ function pause() {
 
 
 // Generate a random wave
-// 数组格式：[怪兽出现间隔，[怪物类型，怪物数量],[怪物类型，怪物数量]...]
-// 这里原本逻辑有问题，目前只支持push单个数组，如果连续push多个数组，后面的怪物数组不会生效
+// Array format: [Monster appearance interval, [Monster type, Monster number], [Monster type, Monster number]...]
+// The original logic here is wrong. Currently, only a single array can be pushed. If multiple arrays are pushed continuously, the following monster arrays will not take effect
 function randomWave() {
+
+    if (diffcultyLevel == 'easy') {
+        return randomWaveEasy();
+    }
+
+    if (diffcultyLevel == 'normal') {
+        return randomWaveNormal();
+    }
+
+
+    if (diffcultyLevel == 'hard') {
+        return randomWaveHard();
+    }
+
+}
+
+
+function randomWaveEasy() {
     var waves = [];
 
     if (mapData == maps["customMap"]) {
         if (isWave(0, 1)) {
             waves.push([116, ['Bandit', 5]]);
         }
+
         if (isWave(1, 2)) {
+
             waves.push([112, ['Bandit', 8]]);
         }
-        if (isWave(2, 3)) {
-            waves.push([108, ['Bandit', 6], ['BatteringRam', 1]]);
-        }
-        if (isWave(3, 4)) {
-            waves.push([104, ['BatteringRam', 2]]);
-        }
-        if (isWave(4, 5)) {
-            waves.push([100, ['Bandit', 12]]);
-        }
-        if (isWave(5, 6)) {
-            waves.push([96, ['Bandit', 8], ['BatteringRam', 2]]);
-        }
-        if (isWave(6, 7)) {
-            waves.push([92, ['BatteringRam', 4]]);
-        }
-        if (isWave(7, 8)) {
-            waves.push([88, ['Bandit', 15], ['BatteringRam', 1]]);
-        }
-        if (isWave(8, 9)) {
-            waves.push([84, ['Bandit', 10], ['BatteringRam', 3]]);
-        }
-        if (isWave(9, 10)) {
-            waves.push([80, ['BatteringRam', 5]]);
-        }
+        // if (isWave(2, 3)) {
+        //     waves.push([108, ['Bandit', 6], ['BatteringRam', 1]]);
+        // }
+        // if (isWave(3, 4)) {
+
+        //     waves.push([104, ['BatteringRam', 2]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([100, ['Bandit', 12]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([96, ['Bandit', 8], ['BatteringRam', 2]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([92, ['BatteringRam', 4]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([88, ['Bandit', 15], ['BatteringRam', 1]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([84, ['Bandit', 10], ['BatteringRam', 3]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([80, ['BatteringRam', 5]]);
+        // }
     }
+
     if (mapData == maps["map2"]) {
         if (isWave(0, 1)) {
             waves.push([110, ['Mouse', 6]]);
+            // waves.push([100, ['PirateRaider', 2]]);
         }
         if (isWave(1, 2)) {
             waves.push([107, ['Mouse', 10]]);
         }
-        if (isWave(2, 3)) {
-            waves.push([103, ['PirateRaider', 2]]);
-        }
-        if (isWave(3, 4)) {
-            waves.push([97, ['Mouse', 8], ['PirateRaider', 1]]);
-        }
-        if (isWave(4, 5)) {
-            waves.push([92, ['Mouse', 15]]);
-        }
-        if (isWave(5, 6)) {
-            waves.push([88, ['PirateRaider', 4]]);
-        }
-        if (isWave(6, 7)) {
-            waves.push([83, ['Mouse', 12], ['PirateRaider', 2]]);
-        }
-        if (isWave(7, 8)) {
-            waves.push([79, ['PirateRaider', 6]]);
-        }
-        if (isWave(8, 9)) {
-            waves.push([75, ['Mouse', 20]]);
-        }
-        if (isWave(9, 10)) {
-            waves.push([70, ['Mouse', 15], ['PirateRaider', 5]]);
-        }
+        // if (isWave(2, 3)) {
+        //     waves.push([100, ['PirateRaider', 3]]);
+        // }
+        // if (isWave(3, 4)) {
+        //     waves.push([97, ['Mouse', 8], ['PirateRaider', 1]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([92, ['Mouse', 15]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([88, ['PirateRaider', 4]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([83, ['Mouse', 12], ['PirateRaider', 2]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([79, ['PirateRaider', 6]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([75, ['Mouse', 20]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([70, ['Mouse', 15], ['PirateRaider', 5]]);
+        // }
     }
     if (mapData == maps["map3"]) {
         if (isWave(0, 1)) {
@@ -445,66 +448,281 @@ function randomWave() {
         if (isWave(1, 2)) {
             waves.push([96, ['AIMech', 1]]);
         }
-        if (isWave(2, 3)) {
-            waves.push([93, ['DroneSwarm', 4]]);
-        }
-        if (isWave(3, 4)) {
-            waves.push([90, ['DroneSwarm', 1], ['AIMech', 1]]);
-        }
-        if (isWave(4, 5)) {
-            waves.push([85, ['DroneSwarm', 3]]);
-        }
-        if (isWave(5, 6)) {
-            waves.push([81, ['AIMech', 2]]);
-        }
-        if (isWave(6, 7)) {
-            waves.push([79, ['DroneSwarm', 4]]);
-        }
-        if (isWave(7, 8)) {
-            waves.push([73, ['DroneSwarm', 4], ['AIMech', 2]]);
-        }
-        if (isWave(8, 9)) {
-            waves.push([68, ['AIMech', 3]]);
-        }
-        if (isWave(9, 10)) {
-            waves.push([62, ['DroneSwarm', 5], ['AIMech', 1]]);
-        }
+        // if (isWave(2, 3)) {
+        //     waves.push([93, ['DroneSwarm', 4]]);
+        // }
+        // if (isWave(3, 4)) {
+        //     waves.push([90, ['DroneSwarm', 1], ['AIMech', 1]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([85, ['DroneSwarm', 3]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([81, ['AIMech', 2]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([79, ['DroneSwarm', 4]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([73, ['DroneSwarm', 4], ['AIMech', 2]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([68, ['AIMech', 3]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([62, ['DroneSwarm', 5], ['AIMech', 1]]);
+        // }
     }
 
 
     return random(waves);
 }
 
+function randomWaveNormal() {
+    var waves = [];
+
+    if (mapData == maps["customMap"]) {
+        if (isWave(0, 1)) {
+            waves.push([50, ['Bandit', 8]]);
+        }
+        if (isWave(1, 2)) {
+            waves.push([112, ['Bandit', 8]]);
+        }
+        // if (isWave(2, 3)) {
+        //     waves.push([50, ['Bandit', 4], ['BatteringRam', 1]]);
+        // }
+        // if (isWave(3, 4)) {
+        //     waves.push([80, ['BatteringRam', 2]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([50, ['Bandit', 12]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([50, ['Bandit', 8], ['BatteringRam', 2]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([92, ['BatteringRam', 4]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([50, ['Bandit', 15], ['BatteringRam', 1]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([10, ['Bandit', 10], ['BatteringRam', 3]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([80, ['BatteringRam', 5]]);
+        // }
+    }
+    if (mapData == maps["map2"]) {
+        if (isWave(0, 1)) {
+            waves.push([50, ['Mouse', 6]]);
+        }
+        if (isWave(1, 2)) {
+            waves.push([80, ['Mouse', 10]]);
+        }
+        // if (isWave(2, 3)) {
+        //     waves.push([103, ['PirateRaider', 2]]);
+        // }
+        // if (isWave(3, 4)) {
+        //     waves.push([97, ['Mouse', 4], ['PirateRaider', 1]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([20, ['Mouse', 15]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([100, ['PirateRaider', 4]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([50, ['Mouse', 12], ['PirateRaider', 2]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([60, ['PirateRaider', 6]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([65, ['Mouse', 20]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([70, ['Mouse', 15], ['PirateRaider', 5]]);
+        // }
+    }
+    if (mapData == maps["map3"]) {
+        if (isWave(0, 1)) {
+            waves.push([80, ['DroneSwarm', 3]]);
+        }
+        if (isWave(1, 2)) {
+            waves.push([96, ['AIMech', 1], ['PirateRaider', 1]]);
+        }
+        // if (isWave(2, 3)) {
+        //     waves.push([93, ['DroneSwarm', 5]]);
+        // }
+        // if (isWave(3, 4)) {
+        //     waves.push([90, ['DroneSwarm', 1], ['AIMech', 1]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([85, ['DroneSwarm', 3]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([81, ['AIMech', 2], ['PirateRaider', 1]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([79, ['DroneSwarm', 4]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([73, ['DroneSwarm', 4], ['AIMech', 2]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([68, ['AIMech', 3], ['PirateRaider', 1]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([62, ['DroneSwarm', 5], ['AIMech', 1]]);
+        // }
+    }
+
+
+    return random(waves);
+}
+
+function randomWaveHard() {
+    var waves = [];
+
+    if (mapData == maps["customMap"]) {
+        if (isWave(0, 1)) {
+            waves.push([80, ['Bandit', 8]]);
+        }
+        if (isWave(1, 2)) {
+            waves.push([30, ['Bandit', 4], ['BatteringRam', 2]]);
+        }
+        if (isWave(2, 3)) {
+            waves.push([50, ['Bandit', 6], ['BatteringRam', 4]]);
+        }
+        // if (isWave(3, 4)) {
+        //     waves.push([80, ['BatteringRam', 4],]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([50, ['Bandit', 15]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([50, ['Bandit', 10], ['BatteringRam', 5]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([92, ['BatteringRam', 8]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([50, ['Bandit', 15], ['BatteringRam', 4]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([10, ['Bandit', 10], ['BatteringRam', 6]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([30, ['BatteringRam', 20]]);
+        // }
+    }
+    if (mapData == maps["map2"]) {
+        if (isWave(0, 1)) {
+            waves.push([50, ['Mouse', 10]]);
+        }
+        if (isWave(1, 2)) {
+            waves.push([50, ['Mouse', 10], ['PirateRaider', 2]]);
+        }
+        if (isWave(2, 3)) {
+            waves.push([103, ['PirateRaider', 4]]);
+        }
+        // if (isWave(3, 4)) {
+        //     waves.push([97, ['Mouse', 4], ['PirateRaider', 2]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([20, ['Mouse', 15], ['PirateRaider', 2]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([100, ['PirateRaider', 6]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([50, ['Mouse', 12], ['PirateRaider', 4]]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([60, ['PirateRaider', 8]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([65, ['Mouse', 30], ['PirateRaider', 10]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([70, ['Mouse', 30], ['PirateRaider', 10]]);
+        // }
+    }
+    if (mapData == maps["map3"]) {
+        if (isWave(0, 1)) {
+            waves.push([50, ['DroneSwarm', 8], ['PirateRaider', 2]]);
+        }
+        if (isWave(1, 2)) {
+            waves.push([96, ['AIMech', 3], ['PirateRaider', 3]]);
+        }
+        if (isWave(2, 3)) {
+            waves.push([93, ['DroneSwarm', 10], ['PirateRaider', 3], ['AIMech', 2]]);
+        }
+        // if (isWave(3, 4)) {
+        //     waves.push([90, ['DroneSwarm', 5], ['AIMech', 2], ['PirateRaider', 3]]);
+        // }
+        // if (isWave(4, 5)) {
+        //     waves.push([85, ['DroneSwarm', 6], ['PirateRaider', 6]]);
+        // }
+        // if (isWave(5, 6)) {
+        //     waves.push([81, ['AIMech', 2], ['PirateRaider', 5], ['PirateRaider', 3]]);
+        // }
+        // if (isWave(6, 7)) {
+        //     waves.push([79, ['DroneSwarm', 8]], ['PirateRaider', 8]);
+        // }
+        // if (isWave(7, 8)) {
+        //     waves.push([73, ['DroneSwarm', 7], ['AIMech', 2], ['PirateRaider', 3]]);
+        // }
+        // if (isWave(8, 9)) {
+        //     waves.push([68, ['AIMech', 3], ['PirateRaider', 5], ['PirateRaider', 3]]);
+        // }
+        // if (isWave(9, 10)) {
+        //     waves.push([62, ['DroneSwarm', 10], ['AIMech', 5], ['PirateRaider', 10]]);
+        // }
+    }
+
+
+    return random(waves);
+}
+
+
 // 开始游戏逻辑入口
 function startGame(id) {
+
     loadGame(id);
     resetGame();
     // 自动开始游戏
-    paused = false;
+
+    //先展示指引界面
+    if (showGuideScrren == true) {
+        paused = true;
+    } else {
+        paused = false;
+    }
     isStartGame = true;
+
     onGameStart();
     switchBGM();
 }
 
-// 停止游戏
+// Stop the game
 function stopGame() {
     isStartGame = false;
     onLevelFinished();
 }
 
-
-// 加载游戏地图
+// Load the game map
 function loadGame(mapID) {
     loadMap(mapID);
-    console.log(`成功加载地图${mapID}, 路径为${grid}`);
+    console.log(`Successfully loaded map ${mapID}, path is ${grid}`);
 }
 
-
-// 重置关卡
+// Reset level
 function resetGame() {
 
-    hero = new Hero(ts, gameHeight - ts);
-    // 清空所有实体
+    hero = new Hero(ts * 4, gameHeight - ts * 3);
+// Clear all entities
     monsters = [];
     projectiles = [];
     systems = [];
@@ -514,30 +732,26 @@ function resetGame() {
     newTowers = [];
     vfx = [];
 
-    // // 这里可以获取一次全局路径
-    // window._globalPath = findPathBFS(grid);
-    // console.log('全局路径 = ', window._globalPath);
-    // 重置状态
-    health = defaultHealth;    // 初始化玩家生命值
-    cash = defaultCash;   // 初始化玩家金钱
+// Reset state
+    health = defaultHealth; // Initialize player health
+    cash = defaultCash; // Initialize player money
     maxHealth = health;
     prevHealth = health;
-    wave = 0;          // 重置波数
-    gameEnded = false;   // 重置游戏结束标记
-    resultRating = 0;   // 重置结算
+    wave = 0; // Reset wave number
+    gameEnded = false; // Reset game end mark
+    resultRating = 0; // Reset settlement
     toWait = false;
-    // 重置各项标志
+// Reset various flags
     paused = true;
     scd = 0;
     toCooldown = false;
     toPathfind = false;
     toPlace = false;
-    // 启动第一波（此时 nextWave() 会使 wave 变为 1）
+// Start the first wave (at this time nextWave() will change wave to 1)
     nextWave();
 
     tooltip = new Tooltip("Here comes the " + wave + " wave of enemies!", cols * ts / 2, rows * ts / 2);
 }
-
 
 // Resizes cols, rows, and canvas based on tile size
 function resizeMax() {
@@ -585,45 +799,18 @@ function showRange(t, cx, cy) {
     pop();
 }
 
-// Display tower information
-function updateInfo(t) {
-    var name = document.getElementById('name');
-    name.innerHTML = '<span style="color:rgb(' + t.color + ')">' + t.title +
-        '</span>';
-    document.getElementById('cost').innerHTML = 'Cost: $' + t.totalCost;
-    document.getElementById('sellPrice').innerHTML = 'Sell price: $' +
-        t.sellPrice();
-    document.getElementById('upPrice').innerHTML = 'Upgrade price: ' +
-        (t.upgrades.length > 0 ? '$' + t.upgrades[0].cost : 'N/A');
-    document.getElementById('damage').innerHTML = 'Damage: ' + t.getDamage();
-    document.getElementById('type').innerHTML = 'Type: ' +
-        t.type.toUpperCase();
-    document.getElementById('range').innerHTML = 'Range: ' + t.range;
-    document.getElementById('cooldown').innerHTML = 'Avg. Cooldown: ' +
-        t.getCooldown().toFixed(2) + 's';
-    var buttons = document.getElementById('info-buttons');
-    buttons.style.display = toPlace ? 'none' : 'flex';
-    document.getElementById('info-div').style.display = 'block';
-}
-
-// Update pause button
-function updatePause() {
-    // document.getElementById('pause').innerHTML = paused ? 'Start' : 'Pause';
-}
-
-
-function upgrade(t) {      // 定义升级函数，接收升级配置对象t作为参数
-    if (cash >= t.cost) {    // 校验当前资金是否满足升级所需费用
-        cash -= t.cost;      // 扣除升级消耗的资金
-        selected.upgrade(t); // 执行目标对象的升级逻辑
-        selected.upgrades = t.upgrades ? t.upgrades : [];  // 更新可用升级项列表（存在则继承，否则重置为空）
-        //  // 刷新界面显示最新信息
+function upgrade(t) { // Define the upgrade function, receive the upgrade configuration object t as a parameter
+    if (cash >= t.cost) { // Check whether the current funds meet the cost of the upgrade
+        cash -= t.cost; // Deduct the funds consumed by the upgrade
+        selected.upgrade(t); // Execute the upgrade logic of the target object
+        selected.upgrades = t.upgrades ? t.upgrades : []; // Update the list of available upgrade items (inherit if it exists, otherwise reset to empty)
+// // Refresh the interface to display the latest information
         towerInfoPane.t = selected;
         towerInfoPane.isExpanded = false;
         towerInfoPane.toggle();
         towerInfoPane.isPlaceTower = true;
 
-        // 绘制升级效果
+// Draw the upgrade effect
         vfx.push(new UpgradeFX(60, selected.pos.x, selected.pos.y));
     }
 }
@@ -646,11 +833,12 @@ function drawTower() {
 // Main p5 functionsS
 function draw() {
     push();
+//Just updated the menu component
     updateMenuDisplay();
 
     if (!isStartGame) return;
     if (!grid) {
-        console.log("没有地图");
+        console.log("No map");
         background(0);
         return;
     }
@@ -658,19 +846,21 @@ function draw() {
     drawGameView();
     drawTowerPane();
 
-    pop();
+    drawGuideScreen();
+
 }
 
-// === 游戏主画面逻辑 ===
+// === Game main screen logic ===
 function drawGameView() {
     push();
     translate(gameX, gameY);
+    // translate(gameX, 0);
     background(50);
 
     if (enableShakeEffect) drawShakeEffect();
     image(bgImg, 0, 0, gameWidth, height);
 
-    updatePause();
+    // updatePause();
 
     if (!paused) {
         if (scd > 0) scd--;
@@ -692,15 +882,263 @@ function drawGameView() {
 
     updateMonsterStateUI();
     animationDraw();
+    //Pause drawing
     updateGameStateUI();
     lateUpdateMenuDisplay();
 
-    if (debugMap) drawMapGrid();
+    //Grid debug
+    // if (debugMap) drawMapGrid();
     pop();
     drawRedFlashOverlay();
+
+
 }
 
-// === 英雄绘制与更新 ===
+
+function drawGuideScreen() {
+
+    push();
+    translate(gameX, gameY);
+    if (showGuideScrren) {
+        noStroke();
+        fill(0, 90);
+        rect(0, 0, width, height);
+
+        // Introducing the health bar
+        if (guideIndex == 1) {
+            let startX = width * 0.08;
+            let ypos = 20 * heightRatio;
+            let overX = startX;
+            let overY = ypos + 50 * heightRatio;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "Life bar. When the enemy reaches the end, the health value decreases by 1.";
+            let text_width = textWidth(txt);
+            text(txt, guideFingerX + text_width / 2, guideFingerY + ts * 1.5);
+
+        }
+        ////Introduce enemy
+        if (guideIndex == 2) {
+
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+            let startX = width * 0.08;
+            let ypos = 20 * heightRatio;
+            let overX = gameX + spawnpoints[0].x * ts;
+            let overY = gameY + spawnpoints[0].y * ts + ts;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "Enemies have different characteristics for each type. Eliminate the enemies to obtain gold coins.";
+            let text_width = textWidth(txt);
+            text(txt, guideFingerX + text_width / 2, guideFingerY + ts * 1.5);
+
+        }
+
+        //Introduction to Gold Coin
+        if (guideIndex == 3) {
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+            let startX2 = width * 0.08 + 190 * widthRatio + width * 0.01;
+            let ypos = 20 * heightRatio;
+            let overX = startX2;
+            let overY = ypos + 50 * heightRatio;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "Gold coins can be used to purchase towers.";
+            let text_width = textWidth(txt);
+            text(txt, guideFingerX + text_width / 2, guideFingerY + ts * 1.5);
+
+        }
+        //Introduction to tower use
+        if (guideIndex == 4) {
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+
+            let overX = towerInfoPane.x + ts / 2;
+            let overY = pages[0].buttons[0].y + ts / 2;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "Select the tower you want to purchase, and detailed information will appear below.";
+            let text_width = textWidth(txt);
+            text(txt, guideFingerX - text_width * 0.5, guideFingerY + ts);
+        }
+
+        //Place a tower, and it will show that it cannot be placed.
+        if (guideIndex == 5) {
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+
+            //draw place
+            let c = center(3, 3);
+
+            push();
+            // translate(gameX,gameY);
+            stroke(255);
+            fill(0, 63);
+            var r = (2 + 0.5) * ts * 2;
+            ellipse(c.x, c.y, r, r);
+            pop();
+
+            push();
+            translate(c.x, c.y);
+            rotate(PI / 4);
+            noStroke();
+            fill(207, 0, 15);
+            var edge = 0.1 * ts;
+            var len = 0.9 * ts / 2;
+            rect(-edge, len, edge * 2, -len * 2);
+            rotate(PI / 2);
+            rect(-edge, len, edge * 2, -len * 2);
+            pop();
+
+            //draw finger
+            let overX = c.x;
+            let overY = c.y + ts / 2;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "Towers cannot be placed in the passage.";
+            let text_width = textWidth(txt);
+            text(txt, guideFingerX + text_width / 2, guideFingerY + ts);
+
+
+        }
+        //Tower placement instructions
+        if (guideIndex == 6) {
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+
+
+            //draw place
+            let c = center(4, 3);
+            image(tower1Img, c.x - ts / 2, c.y - ts / 2, ts, ts);
+
+            //draw finger
+            let overX = c.x;
+            let overY = c.y + ts / 2;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "If the purchase and placement are successful,\n the tower will start to attack the enemies within its range.";
+            let text_width = textWidth(txt);
+            textAlign(LEFT, CENTER);
+            text(txt, guideFingerX + ts, guideFingerY + ts);
+            textAlign(CENTER, CENTER);
+
+        }
+
+        //Hero Description
+        if (guideIndex == 7) {
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+            //draw finger
+            let overX = ts * 4;
+            let overY = gameHeight - ts * 3;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+            image(keyboardImg, overX + ts * 2, overY - ts, ts, ts);
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "Use the keyboard to move the hero. \nWhen the hero moves to the position of the tower, \n" +
+                "it can absorb the tower's abilities and unleash the tower's skills.";
+            let text_width = textWidth(txt);
+            textAlign(LEFT, CENTER);
+            text(txt, guideFingerX + ts, guideFingerY + ts);
+            textAlign(CENTER, CENTER);
+        }
+
+        if (guideIndex == 8) {
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+            //draw finger
+            let overX = gameWidth - ts * 3;
+            let overY = ts * 0.8;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.2);
+            // noStroke();
+            let txt = "If you are satisfied with the placement of the towers, \n" +
+                "you can freely switch to a faster speed to accelerate the progress.";
+            let text_width = textWidth(txt);
+            textAlign(LEFT, CENTER);
+            text(txt, guideFingerX - ts * 4, guideFingerY + ts * 1.2);
+            textAlign(CENTER, CENTER);
+        }
+
+        if (guideIndex == 9) {
+            image(BanditImg, gameX + spawnpoints[0].x * ts, gameY + spawnpoints[0].y * ts, ts, ts);
+            //draw finger
+            let overX = gameWidth - ts * 3;
+            let overY = ts * 0.8;
+            guideFingerX = lerp(guideFingerX, overX, 0.1);
+            guideFingerY = lerp(guideFingerY, overY, 0.1);
+
+
+            if (guideFingerX == overX) ;
+            guideAlpha += 3;
+            fill(255, guideAlpha);
+            textSize(ts * 0.4);
+            // noStroke();
+            let txt = "OK, go for it, my warrior!";
+
+            textAlign(CENTER, CENTER);
+            text(txt, gameX + gameWidth / 2, gameY + gameHeight / 2);
+
+        }
+        guideAngle += 0.1;
+        image(guideFingerImg, guideFingerX, guideFingerY, ts * 0.6 + sin(guideAngle) * ts * 0.1, ts * 0.8 + sin(guideAngle) * ts * 0.1);
+
+        fill("yellow");
+        textSize(ts * 0.4);
+        let txt = "Press the left mouse button to continue.";
+        text(txt, gameX + gameWidth / 2, gameY + gameHeight - ts);
+
+    }
+    pop();
+    if (showGuideScrren) {
+        btn_bearkGuide.draw();
+    }
+
+}
+
+// === Hero drawing and updating ===
 function drawHero() {
     hero.draw();
     if (!paused) {
@@ -709,7 +1147,7 @@ function drawHero() {
     }
 }
 
-// === 生成怪物 ===
+// === Spawn Monster ===
 function spawnMonsters() {
     if (canSpawn() && !paused) {
         var name = newMonsters.shift();
@@ -732,7 +1170,7 @@ function spawnMonsters() {
     }
 }
 
-// === 怪物更新与绘制 ===
+// === Monster Update and Draw ===
 function updateMonsters() {
     for (let i = monsters.length - 1; i >= 0; i--) {
         let e = monsters[i];
@@ -755,7 +1193,7 @@ function updateMonsters() {
     }
 }
 
-// === 塔更新与绘制 ===
+// === Tower update and drawing ===
 function updateTowers() {
     for (let i = 0; i < towers.length; i++) {
         let t = towers[i];
@@ -771,7 +1209,7 @@ function updateTowers() {
     }
 }
 
-// === 粒子系统 ===
+// === Particle System ===
 function updateParticles() {
     for (let i = systems.length - 1; i >= 0; i--) {
         let ps = systems[i];
@@ -786,7 +1224,7 @@ function updateParticles() {
     }
 }
 
-// === 子弹系统 ===
+// === Bullet System ===
 function updateProjectiles() {
     for (let i = projectiles.length - 1; i >= 0; i--) {
         let p = projectiles[i];
@@ -803,7 +1241,7 @@ function updateProjectiles() {
     }
 }
 
-// === 鼠标放置塔显示范围 ===
+// === Display range of tower when mouse is placed ===
 function handlePlacementPreview() {
     if (mouseX >= gameX && mouseY >= gameY && mouseX <= gameX + gameWidth && mouseY <= gameY + gameHeight) {
         if (doRange()) {
@@ -829,7 +1267,7 @@ function handlePlacementPreview() {
     }
 }
 
-// === 合并新生成实体 ===
+// === Merge newly generated entities ===
 function appendNewEntities() {
     projectiles = projectiles.concat(newProjectiles);
     towers = towers.concat(newTowers);
@@ -837,7 +1275,7 @@ function appendNewEntities() {
     newTowers = [];
 }
 
-// === 游戏状态判定与切换波次 ===
+// === Game status determination and wave switching ===
 function checkGameState() {
     if (health <= 0) gameover(false);
 
@@ -862,12 +1300,12 @@ function checkGameState() {
     }
 }
 
-// === 画面心跳效果 ===
+// === Screen heartbeat effect ===
 function drawHeartbeatEffectIfEnabled() {
     if (enableHeartbeatEffect) drawHeartbeatEffect();
 }
 
-// === 塔界面UI ===
+// === Tower UI ===
 function drawTowerPane() {
     push();
     drawTower();
@@ -898,25 +1336,25 @@ class SlidePane {
         this.x = x;
         this.y = y;
         this.w = w;
-        this.h = h; // 面板最大展开高度
-        this.contentHeight = contentHeight; // 内容总高度
+        this.h = h; // Maximum expanded height of the panel
+        this.contentHeight = contentHeight; // Total content height
         this.t = undefined;
         this.isPlaceTower = true;
 
-        this.offsetY = 0;  // 当前滑动偏移量
-        this.targetY = 0;  // 目标滑动位置
-        this.scrollSpeed = 0.2; // 平滑滚动速度
+        this.offsetY = 0; // Current sliding offset
+        this.targetY = 0; // Target sliding position
+        this.scrollSpeed = 0.2; // Smooth scrolling speed
 
         this.isDragging = false;
         this.lastY = 0;
 
-        this.isExpanded = false; // 是否展开
-        this.targetHeight = 50; // 目标高度（初始收起）
-        this.currentHeight = 50; // 实时面板高度
+        this.isExpanded = false; // Expand or not
+        this.targetHeight = 50; // Target height (initial collapse)
+        this.currentHeight = 50; // Real-time panel height
     }
 
     update() {
-        // **平滑调整面板高度**
+        // **Smoothly adjust panel height**
         this.currentHeight = lerp(this.currentHeight, this.targetHeight, 0.1);
         this.offsetY = lerp(this.offsetY, this.targetY, this.scrollSpeed);
     }
@@ -924,63 +1362,63 @@ class SlidePane {
     display() {
         push();
         translate(this.x, this.y);
-        
+
         this.drawPanelBase();
         this.drawTitleBar();
-        
+
         if (this.isExpanded) {
             this.drawExpandedContent();
         }
-        
+
         pop();
     }
-    
-    // 绘制面板基础
+
+    // Draw the panel basics
     drawPanelBase() {
         fill(255);
         stroke(180);
         strokeWeight(2);
         rect(0, 0, this.w, this.currentHeight, 15);
     }
-    
-    // 绘制标题栏
+
+    // Draw the title bar
     drawTitleBar() {
         fill(255);
         rect(0, 0, this.w, 50, 15);
-        
+
         fill(0);
         textFont(uiFont);
         textSize(towerWidth / 10);
         textAlign(CENTER, CENTER);
         text(this.isExpanded ? "🔼 TOWER INFO" : "🔽 TOWER INFO", this.w / 2, 25);
     }
-    
-    // 绘制展开内容
+
+    // Draw the expanded content
     drawExpandedContent() {
         if (this.t === undefined) return;
-        
+
         push();
         this.drawTowerInfo();
-        
+
         if (this.isPlaceTower) {
             this.drawActionButtons();
         }
         pop();
     }
-    
-    // 绘制塔信息
+
+    // Draw tower information
     drawTowerInfo() {
         const startX = towerWidth / 12;
         const startY = 60;
         const fontSize = towerWidth / 15;
         const lineHeight = fontSize * 1.5;
-        
+
         fill(this.t.color);
         noStroke();
         textSize(fontSize);
         textAlign(LEFT, TOP);
-        
-        // 绘制各项信息
+
+        // Draw various information
         const infoLines = [
             this.t.title,
             `Cost:$${this.t.totalCost}`,
@@ -991,30 +1429,30 @@ class SlidePane {
             `Range:${this.t.range}`,
             `Avg. Cooldown:${this.t.getCooldown().toFixed(2)}s`
         ];
-        
+
         infoLines.forEach((line, i) => {
             fill(i === 0 ? this.t.color : 0);
             text(line, startX, startY + lineHeight * i);
         });
     }
-    
-    // 绘制操作按钮
+
+    // Draw the operation button
     drawActionButtons() {
         const startX = towerWidth / 12;
         const startY = 60;
         const fontHeight = towerWidth / 20;
-        const btnY = startY + fontHeight * 9;
-        
-        // 绘制按钮背景
+        const btnY = startY + fontHeight * 18;
+
+        // Draw the button background
         fill(100, 150, 200);
         rect(startX, btnY, towerWidth / 3, towerWidth / 10, 10);
         rect(startX + towerWidth / 3 + towerWidth / 5, btnY, towerWidth / 3, towerWidth / 10, 10);
-        
-        // 绘制按钮文字
+
+        // Draw the button text
         fill(255);
         textAlign(CENTER, CENTER);
-        text("SELL", startX + towerWidth/6, btnY + towerWidth/20);
-        text("UPGRADE", startX + towerWidth/3 + towerWidth/5 + towerWidth/6, btnY + towerWidth/20);
+        text("SELL", startX + towerWidth / 6, btnY + towerWidth / 20);
+        text("UPGRADE", startX + towerWidth / 3 + towerWidth / 5 + towerWidth / 6, btnY + towerWidth / 20);
     }
 
     toggle() {
@@ -1043,9 +1481,10 @@ class SlidePane {
                 let b2Height = towerWidth / 10;
 
                 let bx1 = this.x + startX;
-                let by1 = this.y + startY + fontHeight * 9;
+                let by1 = this.y + startY + fontHeight * 18;
                 let bx2 = this.x + startX + towerWidth / 3 + towerWidth / 5;
-                let by2 = this.y + startY + fontHeight * 9;
+                let by2 = this.y + startY + fontHeight * 18;
+
 
                 if (mx > bx1 && mx < bx1 + b1Width && my > by1 && my < by1 + b1Height) {
                     // alert("你点击了按钮 1");
@@ -1074,21 +1513,21 @@ class Page {
         this.buttons = [];
     }
 
-    // 添加按钮
+
     addButton(row, col, label) {
-        let btnX = this.x + col * (this.w / 2 + towerWidth / 20); // 设置按钮的X坐标
-        let btnY = this.y + row * (this.w / 2 + towerWidth / 20); // 设置按钮的Y坐标
+        let btnX = this.x + col * (this.w / 2 + towerWidth / 20); // Set the button's X coordinate
+        let btnY = this.y + row * (this.w / 2 + towerWidth / 20); // Set the button's Y coordinate
         this.buttons.push(new Button(btnX, btnY, this.w / 2, this.w / 2, null, label));
     }
 
-    // 显示页面上的所有按钮
+
     display() {
         for (let btn of this.buttons) {
             btn.display();
         }
     }
 
-    // 检查点击事件
+
     checkClicked() {
         for (let btn of this.buttons) {
             if (btn.clicked()) {
@@ -1123,7 +1562,7 @@ class Page {
                     setPlace('emp');
                 }
                 towerInfoPane.isPlaceTower = false;
-                console.log(`按钮 ${btn.label} 被点击`);
+                // console.log(`Button ${btn.label} was clicked`);
             }
         }
     }
@@ -1136,7 +1575,7 @@ class Button {
         this.w = w;
         this.h = h;
 
-        // this.img = img;
+
         this.imgSize = 0.8;
         this.label = label;
         this.isHovered = false;
@@ -1149,44 +1588,79 @@ class Button {
         strokeWeight(2);
         rect(this.x, this.y, this.w, this.h, 15);
 
-        // if (this.img) {
-        //     let imgW = this.w * this.imgSize;
-        //     let imgH = this.h * this.imgSize;
-        //     image(this.img, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
-        // }
 
         if (this.label == "Archer Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(tower1Img, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 50", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else if (this.label == "Boiling Oil Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(tower2Img, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 70", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else if (this.label == "Cannon Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(t4_1Image, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 100", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else if (this.label == "Net Thrower Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(t3_1Image, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 60", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else if (this.label == "EMP Disruptor Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(t7_1Image, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 150", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else if (this.label == "Laser AA Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(t5_1Image, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 150", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else if (this.label == "Trebuchet Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(t4_1Image, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 120", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else if (this.label == "EMP Tower") {
             let imgW = this.w * this.imgSize;
             let imgH = this.h * this.imgSize;
             image(t6_1Image, this.x + (this.w - imgW) / 2, this.y + (this.h - imgH) / 2, imgW, imgH);
+            this.fillRectByMoney();
+            fill("yellow");
+            textSize(imgH / 4);
+            // textAlign(CENTER,CENTER);
+            text("$ 200", this.x + (this.w - imgW) / 2 + imgW / 2, this.y + (this.h - imgH / 3))
         } else {
             fill(0);
             stroke(0);
@@ -1198,6 +1672,15 @@ class Button {
         }
 
 
+    }
+
+    fillRectByMoney() {
+        if (this.label != "<" && this.label != ">") {
+            let imgW = this.w * this.imgSize;
+            let imgH = this.h * this.imgSize;
+            fill(255);
+            rect(this.x + (this.w - imgW) / 2, this.y + (this.h - imgH / 3), imgW, imgH / 4, 10)
+        }
     }
 
     isMouseOver() {
@@ -1212,107 +1695,6 @@ class Button {
 function windowResized() {
 
     window.location.href = window.location.href;
-
-
-    let div = document.getElementById("game-area");
-    let rect = div.getBoundingClientRect();
-
-
-    gameWidth = windowWidth / 5 * 4;
-    ts = min(gameWidth / cols, windowHeight / rows); // 取最小值，确保是正方形
-    gameWidth = ts * cols;
-    console.log("[debug] windowWidth =", windowWidth);
-    console.log("[debug] windowHeight =", windowHeight);
-    console.log("[debug] cols =", cols);
-    console.log("[debug] rows =", rows);
-    console.log("[debug] ts =", ts);
-    //宽比高小
-    if (gameWidth / cols < gameWidth / (windowHeight / rows)) {
-        gameX = 0;
-        gameY = (windowHeight - windowHeight / rows) / 2;
-    } else {
-        gameX = (windowWidth / 5 * 4 - gameWidth) / 2;
-        gameY = 0;
-    }
-    console.log("[debug] gameWidth =", gameWidth);
-    console.log("[debug] gameX =", gameX);
-
-    widthRatio = ts / 110;
-    heightRatio = ts / 110;
-    pageScale = ts / 110;
-
-    resizeCanvas(windowWidth, rows * ts);  // 窗口大小改变时调整画布大小
-
-    // console.log(ts);
-    let canvas = createCanvas(windowWidth, rows * ts);
-
-    gameHeight = rows * ts;
-    cnvs = canvas;
-
-    // 通过 position() 方法将 canvas 居中
-
-    // Add a class attribute to the canvas.
-    cnvs.class('pinkborder');
-
-
-    // Select the canvas by its class.
-    cnvs = select('.pinkborder');
-
-
-    // Style its border.
-    cnvs.style('display', 'block');  // 确保 canvas 被当作块级元素
-
-
-    // 创建按钮
-    var buttonHeight = gameY + 20 * heightRatio;
-    btnQuit.remove();
-    btnReset.remove();
-    btnResume.remove(); // 删除按钮
-    btnPause.remove();
-    btnSpeed.remove();
-
-
-    btnQuit = createButton('');
-    btnQuit.position(0, buttonHeight);
-    btnQuit.size(60 * widthRatio, 50 * heightRatio);
-    btnQuit.class('button-quit');
-
-    var btnSize = 50 * widthRatio;
-    var space = 20 * widthRatio;
-    //
-
-    btnReset = createButton('');
-    btnReset.position(gameWidth - btnSize - space, buttonHeight);
-    btnReset.size(btnSize, btnSize);
-    btnReset.class('button-reset');
-
-
-    btnResume = createButton('');
-    btnResume.position(btnReset.position().x - btnSize - space, buttonHeight)
-    btnResume.size(btnSize, btnSize);
-    btnResume.class('button-resume');
-
-    btnPause = createButton('');
-    btnPause.position(btnResume.position().x, buttonHeight)
-    btnPause.size(btnSize, btnSize);
-    btnPause.class('button-pause');
-
-    btnSpeed = createButton("x" + getCurrentSpeed().toString());
-    btnSpeed.position(btnPause.position().x - btnSize - space * 5, buttonHeight + 5);
-    btnSpeed.size(80 * widthRatio, 40 * heightRatio);
-    btnSpeed.class('button-speed');
-    //
-    //
-    // // 添加按钮点击事件
-    btnResume.mousePressed(onClickBtnResume);
-    btnPause.mousePressed(onClickBtnPause);
-    btnReset.mousePressed(onClickBtnReset);
-    btnQuit.mousePressed(onClickBtnQuit);
-    btnSpeed.mousePressed(onClickBtnSpeed);
-
-    if (isStartGame == false) {
-        onLevelFinished();
-    }
 
 
 }
@@ -1415,99 +1797,133 @@ function keyReleased() {
 
 
 function mousePressed() {
+
+    if (mouseButton === RIGHT) {
+        debugMap = !debugMap;
+        showGuideScrren = false;
+
+    } else {
+        if (showGuideScrren) {
+
+            if (guideAlpha >= 255) {
+                guideIndex += 1;
+                //介绍塔，模拟点击塔
+                if (guideIndex == 4) {
+                    setPlace('gun');
+                    toPlace = false;
+                }
+                if (guideIndex == 6) {
+                    toPlace = false;
+                    selected = null;
+                    towerInfoPane.t = undefined;
+                    towerInfoPane.isExpanded = true;
+                    towerInfoPane.toggle();
+                }
+                guideAlpha = 0;
+            }
+            if (guideIndex == guideEnd) {
+                showGuideScrren = false;
+                paused = false;
+            }
+
+        }
+    }
+
+    menuButtonPressed();
+    //如果是指导页面，则不能点击塔
+    if (showGuideScrren) {
+        return;
+    }
     console.log("[mousePressed] 全局点击触发");
-  
+
     if (leftArrowBtn.clicked() && currentPage > 0) currentPage--;
     if (rightArrowBtn.clicked() && currentPage < pages.length - 1) currentPage++;
-  
+
     pages[currentPage].checkClicked();
-  
+
     const inTowerHeader =
-      mouseX > towerInfoPane.x && mouseX < towerInfoPane.x + towerInfoPane.w &&
-      mouseY > towerInfoPane.y && mouseY < towerInfoPane.y + 50;
-  
+        mouseX > towerInfoPane.x && mouseX < towerInfoPane.x + towerInfoPane.w &&
+        mouseY > towerInfoPane.y && mouseY < towerInfoPane.y + 50;
+
+
     const inTowerPane =
-      mouseX > towerInfoPane.x && mouseX < towerInfoPane.x + towerInfoPane.w &&
-      mouseY > towerInfoPane.y && mouseY < towerInfoPane.y + towerInfoPane.currentHeight;
-  
+        mouseX > towerInfoPane.x && mouseX < towerInfoPane.x + towerInfoPane.w &&
+        mouseY > towerInfoPane.y && mouseY < towerInfoPane.y + towerInfoPane.currentHeight;
+
     if (inTowerHeader) {
-      towerInfoPane.toggle();
-      return;
+        towerInfoPane.toggle();
+        return;
     } else if (inTowerPane) {
-      towerInfoPane.checkButtonClick(mouseX, mouseY);
-      return;
+        towerInfoPane.checkButtonClick(mouseX, mouseY);
+        return;
     }
-  
-    menuButtonPressed();
-  
+
+
     if (!mouseInMap()) {
-      console.warn("[mousePressed] 鼠标不在地图区域");
-      return;
+        console.warn("[mousePressed] 鼠标不在地图区域");
+        return;
     }
-  
-    
-  
+
+
     const p = gridPosByLastest(mouseX, mouseY);
     const t = getTower(p.x, p.y);
-  
+
     console.log("[mousePressed] 点击位置:", p);
     console.log("[mousePressed] grid 值:", grid?.[p.x]?.[p.y]);
     console.log("[mousePressed] towerType:", towerType);
     console.log("[mousePressed] toPlace:", toPlace);
-  
+
     if (t) {
-      // 点击了已有塔
-      selected = t;
-      toPlace = false;
-      towerInfoPane.t = t;
-      towerInfoPane.isExpanded = false;
-      towerInfoPane.toggle();
-      towerInfoPane.isPlaceTower = true;
-      console.log("[mousePressed] 点击了已有塔，展示信息");
+        // Clicked on an existing tower
+        selected = t;
+        toPlace = false;
+        towerInfoPane.t = t;
+        towerInfoPane.isExpanded = false;
+        towerInfoPane.toggle();
+        towerInfoPane.isPlaceTower = true;
+        console.log("[mousePressed] Clicked on an existing tower, displaying information");
     } else if (typeof towerType !== 'undefined' && toPlace && [0, 3].includes(grid?.[p.x]?.[p.y])) {
-        console.log("[mousePressed] 点击格子位置:", p);
-console.log("[mousePressed] towerType:", towerType);
-console.log("[mousePressed] toPlace:", toPlace);
-console.log("[mousePressed] grid at pos:", grid?.[p.x]?.[p.y]);
-      let newTower = createTower(p.x, p.y, tower[towerType]);
-      newTower.gridPos = createVector(p.x, p.y);
-      buy(newTower);
-  
-      if (!toPlace) {
+        console.log("[mousePressed] Clicked on grid position:", p);
+        console.log("[mousePressed] towerType:", towerType);
+        console.log("[mousePressed] toPlace:", toPlace);
+        console.log("[mousePressed] grid at pos:", grid?.[p.x]?.[p.y]);
+        let newTower = createTower(p.x, p.y, tower[towerType]);
+        newTower.gridPos = createVector(p.x, p.y);
+        buy(newTower);
+
+        if (!toPlace) {
+            selected = null;
+            towerInfoPane.t = undefined;
+            towerInfoPane.isExpanded = true;
+            towerInfoPane.toggle();
+        }
+    } else {
+        console.warn("[mousePressed] cannot place tower", {
+            gridVal: grid?.[p.x]?.[p.y],
+            towerType,
+            toPlace
+        });
+
         selected = null;
-        towerInfoPane.t = undefined;
         towerInfoPane.isExpanded = true;
         towerInfoPane.toggle();
-      }
-    } else {
-      console.warn("[mousePressed] 不能放置塔", {
-        gridVal: grid?.[p.x]?.[p.y],
-        towerType,
-        toPlace
-      });
-  
-      selected = null;
-      towerInfoPane.isExpanded = true;
-      towerInfoPane.toggle();
-      towerInfoPane.t = undefined;
+        towerInfoPane.t = undefined;
     }
-  
-    if (mouseButton === RIGHT) {
-      debugMap = !debugMap;
-    }
-  }
-  
+
+
+}
+
 
 function mouseReleased() {
     menuButtonReleased();
 }
 
-// 游戏失败
+// Game failed
 function gameover(isSurvival) {
     endLevel(isSurvival);
 }
 
-// 关卡结束
+// End of level
 function endLevel(isSurvival) {
     if (!gameEnded) {
         console.log("endLevel");
@@ -1515,14 +1931,14 @@ function endLevel(isSurvival) {
         paused = true;
         onLevelFinished();
 
-        // 计算游戏结果
+        // Calculate game results
         resultRating = calculateRating(health, maxHealth);
-        // 开启关卡结算页面
+        // Open the level settlement page
         openResultMenu(isSurvival);
     }
 }
 
-// 根据剩余血量（health）与最大血量（maxHealth）计算星级（0~3 星）
+// Calculate the star rating (0~3 stars) based on the remaining health (health) and the maximum health (maxHealth)
 function calculateRating(health, maxHealth) {
     if (health >= maxHealth * 0.85) return 3;
     else if (health >= maxHealth * 0.5) return 2;
@@ -1530,7 +1946,7 @@ function calculateRating(health, maxHealth) {
     else return 0;
 }
 
-// 在关卡结束时调用，更新当前关卡的星级记录
+//Called at the end of the level to update the star rating of the current level
 function updateLevelRating(levelId, health, maxHealth) {
     var newRating = calculateRating(health, maxHealth);
     var storedRating = parseInt(localStorage.getItem("rating_" + levelId)) || 0;
@@ -1539,48 +1955,6 @@ function updateLevelRating(levelId, health, maxHealth) {
     }
 }
 
-
-function updateMonsterPanel() {
-    var monsterList = document.getElementById("monster-list");
-    if (!monsterList) return;  // 如果页面中没有该元素，则退出
-    monsterList.innerHTML = ""; // 清空原有内容
-    // 遍历 global monster 对象中的所有键（每个键对应一种敌人类型）
-    for (var key in monster) {
-        if (monster.hasOwnProperty(key)) {
-            // 创建一个新 div 元素作为敌人项
-            var item = document.createElement("div");
-            item.className = "monster-item";
-
-            // 创建 img 作为敌人图像
-            var monsterImage = document.createElement("img");
-            monsterImage.className = "monster-image";
-
-            // 检查是否有贴图
-            if (monster[key].image) {
-                monsterImage.src = monster[key].image;
-            } else {
-                // 创建一个显示颜色的小圆点
-                var colorCircle = document.createElement("span");
-                colorCircle.className = "monster-color";
-                var col = monster[key].color;
-                // 如果 color 是数组，则转换为 rgb 字符串
-                if (Array.isArray(col)) {
-                    colorCircle.style.backgroundColor = "rgb(" + col.join(",") + ")";
-                } else {
-                    colorCircle.style.backgroundColor = col;
-                }
-                item.appendChild(colorCircle);
-            }
-
-            // 创建一个文本节点，显示敌人的名称（key）
-            var nameText = document.createTextNode(key);
-            // 添加元素
-            item.appendChild(monsterImage);
-            item.appendChild(nameText);
-            monsterList.appendChild(item);
-        }
-    }
-}
 
 let prevSelected = null;
 
@@ -1628,22 +2002,21 @@ function switchBGM() {
 
 class Tooltip {
     constructor(message, x, y) {
-        this.message = message;  // 提示信息
-        this.x = x;  // 提示位置X坐标
-        this.y = y;  // 提示位置Y坐标
-        this.alpha = 0;  // 初始透明度为0，表示隐藏
-        // this.displayDuration = 3000;  // 提示显示的持续时间（毫秒）
-        this.fadeDurationInt = 2000;  // 渐变显示和隐藏的持续时间（毫秒）
-        this.fadeDurationOut = 2000;  // 渐变显示和隐藏的持续时间（毫秒）
-        this.speed = 20;//显示速度
-        this.isVisible = true;  // 是否显示
+        this.message = message; // prompt information
+        this.x = x; // prompt position X coordinate
+        this.y = y; // prompt position Y coordinate
+        this.alpha = 0; // initial transparency is 0, indicating hidden
+        // this.displayDuration = 3000; // prompt display duration (milliseconds)
+        this.fadeDurationInt = 2000; // gradient display and hide duration (milliseconds)
+        this.fadeDurationOut = 2000; // gradient display and hide duration (milliseconds)
+        this.speed = 20;//display speed
+        this.isVisible = true; // whether to display
 
     }
 
-    // 显示提示
+    // Display prompt
 
-
-    // 更新提示状态
+// Update prompt status
     update() {
         if (this.fadeDurationInt > 0) {
             this.fadeDurationInt -= this.speed;
@@ -1668,7 +2041,7 @@ class Tooltip {
 
     }
 
-    // 显示文本
+    // Display text
     display() {
         if (this.isVisible) {
             noStroke();
@@ -1679,4 +2052,17 @@ class Tooltip {
         }
 
     }
+}
+
+function initLevelEasy() {
+    loadMosterByEasy();
+}
+
+function initLevelNormal() {
+    loadMosterByNormal();
+}
+
+
+function initLevelHard() {
+    loadMosterByHard();
 }

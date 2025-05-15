@@ -10,138 +10,46 @@ var tower = {};
 
 // ================================================================ Archer Tower ================================================================
 
-// 修改后的塔定义，使用贴图绘制塔的外观，同时发射子弹
+// Modified tower definition, use texture to draw the tower's appearance, and fire bullets
 tower.gun = {
-    // 基本属性
+// Basic properties
     name: 'Archer Tower',
     title: 'Archer Tower',
-    cooldownMax: 72,
-    cooldownMin: 48,
+    cooldownMax: 72+30,
+    cooldownMin: 48+30,
     cost: 50,
     damageMax: 12,
     damageMin: 8,
     range: 2,
     type: 'physical',
-    arrowSpeed: 15,     // 弓箭速度
-    get visual() { return tower1Img; }, // 防御塔的样式图片
-    
+    arrowSpeed: 15, // Arrow speed
+    get visual() { return tower1Img; }, // Style image of defense tower
 
-    // 设置使用贴图绘制塔的外观（你之前预加载的贴图）
+// Set the appearance of the tower to be drawn using textures (the textures you preloaded before)
     hasBase: true,
     hasBarrel: false,
     draw: function () {
         push();
         imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// According to the radius of the tower and the global ts Zoom in and draw the texture
         image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw the upgrade button
         pop();
     },
-    
-    // 自定义攻击效果：创建一个 Bullet 对象模拟子弹飞行
+
+// Custom attack effect: Create a Bullet object to simulate bullet flight
     onAim: function (e) {
-      if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y);
-      if (!this.canFire()) return;
-      this.resetCooldown();
-      
-      let bulletDamage = round(random(this.damageMin, this.damageMax));
-      let b = new Arrow(this.pos.x, this.pos.y, e, bulletDamage, this.arrowSpeed);
-      projectiles.push(b);
-      
-      // 绘制枪口闪光效果（可选），让发射更明显
-      push();
-      stroke(255, 255, 0);
-      strokeWeight(4);
-      let barrelEnd = createVector(
-        this.pos.x + cos(this.angle) * ts * 0.5,
-        this.pos.y + sin(this.angle) * ts * 0.5
-      );
-      line(this.pos.x, this.pos.y, barrelEnd.x, barrelEnd.y);
-      pop();
-      
-      // 如果你需要额外的 onHit 后续处理，可以调用它
-      this.onHit(e);
-    },
-    
-    // 使用 Tower 基类默认的 target 方法（在可见范围内选择目标）
-    target: Tower.prototype.target,
-    // 升级选项
-    upgrades: [
-        {
-            // 基本属性
-            name: 'Archer PLUS Tower',
-            title: 'Archer PLUS Tower',
-            cooldownMax: 61,
-            cooldownMin: 41,
-            cost: 80,
-            damageMax: 16,
-            damageMin: 10,
-            range: 2.5,
-            arrowSpeed: 20,     // 弓箭速度
-            get visual() { return t1_2Image; }, // 防御塔的样式图片
-            
-            upgrades: [
-                {
-                    // 基本属性
-                    name: 'Archer MAX Tower',
-                    title: 'Archer MAX Tower',
-                    cooldownMax: 52,
-                    cooldownMin: 35,
-                    cost: 150,
-                    damageMax: 21,
-                    damageMin: 13,
-                    range: 3,
-                    arrowSpeed: 25,     // 弓箭速度
-                    get visual() { return t1_3Image; }, // 防御塔的样式图片
-                    
-                }
-            ]
-        }
-    ]
-};
-
-// ================================================================ oil Tower ================================================================
-tower.oil = {
-    // 基本属性
-    name: 'oil Tower',
-    title: 'oil Tower',
-    cooldownMax: 150,
-    cooldownMin: 90,
-    cost: 70,
-    damageMax: 15,
-    damageMin: 10,
-    range: 1.5,
-    type: 'fire',
-    get visual() { return tower2Img; }, // 防御塔的样式图片
-
-    // 设置使用贴图绘制塔的外观（你之前预加载的贴图）
-    hasBase: true,
-    hasBarrel: false,
-    draw: function() {
-        push();
-        imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
-        image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
-        pop();
-    },
-
-    // 自定义攻击效果：创建一个 Bullet 对象模拟子弹飞行
-    onAim: function(e) {
         if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y);
         if (!this.canFire()) return;
         this.resetCooldown();
 
         let bulletDamage = round(random(this.damageMin, this.damageMax));
-        // 实例化一个子弹，从塔的位置飞向目标
-        let b = new FireBall(this.pos.x, this.pos.y, e, bulletDamage);
+        let b = new Arrow(this.pos.x, this.pos.y, e, bulletDamage, this.arrowSpeed);
         projectiles.push(b);
 
-        // 绘制枪口闪光效果（可选），让发射更明显
+// Draw muzzle flash effect (optional) to make the shot more obvious
         push();
         stroke(255, 255, 0);
         strokeWeight(4);
@@ -152,15 +60,106 @@ tower.oil = {
         line(this.pos.x, this.pos.y, barrelEnd.x, barrelEnd.y);
         pop();
 
-        // 如果你需要额外的 onHit 后续处理，可以调用它
+// If you need additional onHit post-processing, you can call it
         this.onHit(e);
     },
 
-    // 使用 Tower 基类默认的 target 方法（在可见范围内选择目标）
+// Use the default target method of the Tower base class (select the target within the visible range)
+    target: Tower.prototype.target,
+// Upgrade options
+    upgrades: [
+        {
+// Basic properties
+            name: 'Archer PLUS Tower',
+            title: 'Archer PLUS Tower',
+            cooldownMax: 61,
+            cooldownMin: 41,
+            cost: 80,
+            damageMax: 16,
+            damageMin: 10,
+            range: 2.5,
+            arrowSpeed: 20, // Arrow speed
+            get visual() { return t1_2Image; }, // Tower style image
+
+            upgrades: [
+                {
+// Basic attributes
+                    name: 'Archer MAX Tower',
+                    title: 'Archer MAX Tower',
+                    cooldownMax: 52,
+                    cooldownMin: 35,
+                    cost: 150,
+                    damageMax: 21,
+                    damageMin: 13,
+                    range: 3,
+                    arrowSpeed: 25, // Arrow speed
+                    get visual() { return t1_3Image; }, // Tower style image
+
+                }
+            ]
+        }
+    ]
+};
+
+// ================================================================ oil Tower ================================================================
+tower.oil = {
+// Basic properties
+    name: 'oil Tower',
+    title: 'oil Tower',
+    cooldownMax: 150,
+    cooldownMin: 90,
+    cost: 70,
+    damageMax: 15,
+    damageMin: 10,
+    range: 1.5,
+    type: 'fire',
+    get visual() { return tower2Img; }, // Style image of the defense tower
+
+// Set the appearance of the tower to be drawn using a texture (the texture you pre-loaded earlier)
+    hasBase: true,
+    hasBarrel: false,
+    draw: function() {
+        push();
+        imageMode(CENTER);
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// Draw the texture based on the radius of the tower and the global ts scale
+        image(this.visual, this.pos.x, this.pos.y, ts, ts);
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw the upgrade button
+        pop();
+    },
+
+// Custom attack effect: Create a Bullet object to simulate bullet flight
+    onAim: function(e) {
+        if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y);
+        if (!this.canFire()) return;
+        this.resetCooldown();
+
+        let bulletDamage = round(random(this.damageMin, this.damageMax));
+// Instantiate a bullet and fly from the tower to the target
+        let b = new FireBall(this.pos.x, this.pos.y, e, bulletDamage);
+        projectiles.push(b);
+
+// Draw the muzzle flash effect (optional) to make the launch more obvious
+        push();
+        stroke(255, 255, 0);
+        strokeWeight(4);
+        let barrelEnd = createVector(
+            this.pos.x + cos(this.angle) * ts * 0.5,
+            this.pos.y + sin(this.angle) * ts * 0.5
+        );
+        line(this.pos.x, this.pos.y, barrelEnd.x, barrelEnd.y);
+        pop();
+
+// If you need additional onHit post-processing, you can call it
+        this.onHit(e);
+    },
+
+// Use the default target method of the Tower base class (select the target within the visible range)
     target: Tower.prototype.target,
     upgrades:[
         {
-            // 基本属性
+// Basic properties
             name: 'oil PLUS Tower',
             title: 'oil PLUS Tower',
             cooldownMax: 127,
@@ -170,11 +169,11 @@ tower.oil = {
             damageMin: 13,
             range: 2,
             type: 'fire',
-            get visual() { return t2_2Image; }, // 防御塔的样式图片
+            get visual() { return t2_2Image; }, // Style image of defense tower
 
             upgrades:[
                 {
-                    // 基本属性
+// Basic attributes
                     name: 'oil MAX Tower',
                     title: 'oil MAX Tower',
                     cooldownMax: 107,
@@ -184,7 +183,7 @@ tower.oil = {
                     damageMin: 17,
                     range: 3,
                     type: 'fire',
-                    get visual() { return t2_3Image; }, // 防御塔的样式图片
+                    get visual() { return t2_3Image; }, // Style image of defense tower
                 }
             ]
         },
@@ -193,42 +192,41 @@ tower.oil = {
 
 // ================================================================ Trebuchet Tower ================================================================
 tower.trebuchet = {
-    // 属性
+// Properties
     name: 'trebuchet',
     title: 'Trebuchet Tower',
-    cooldownMax: 210,
-    cooldownMin: 150,
+    cooldownMax: 210*1.5,
+    cooldownMin: 150*1.5,
     cost: 120,
     damageMax: 30,
-    damageMin: 40,
+    damageMin: 20,
     range: 3,
     blastRadius: 1,
     particleAmt: 10,
     type: 'explosion',
-    get visual() { return t4_1Image; }, // 防御塔的样式图片
+    get visual() { return t4_1Image; }, // Style image of defense tower
 
     onAim(e) {
-        if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y);  // 目标锁定
+        if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y); // Target lock
         image(imgAttackAim, e.pos.x - (ts * this.blastRadius) / 2, e.pos.y - (ts * this.blastRadius) / 2,
             ts * this.blastRadius, ts * this.blastRadius);
-        if (!this.canFire()) return;  // 如果不能攻击，返回
-        this.resetCooldown();  // 重置冷却时间
-        this.attack(e);  // 攻击目标
+        if (!this.canFire()) return; // If you can't attack, return
+        this.resetCooldown(); // Reset the cooldown time
+        this.attack(e); // Attack the target
     },
 
     draw: function ()
     {
         push();
         imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// Draw the map according to the radius of the tower and the global ts scaling
         image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw the upgrade button
         pop();
     },
-    
-    
+
     onHit: function(e) {
         var s = new StoneExplosion(e.pos.x, e.pos.y);
         for (var i = 0; i < this.particleAmt; i++)
@@ -249,27 +247,27 @@ tower.trebuchet = {
         {
             name: 'trebuchet PLUS Tower',
             title: 'Trebuchet PLUS Tower',
-            cooldownMax: 179,
-            cooldownMin: 128,
+            cooldownMax: 179*1.5,
+            cooldownMin: 128*1.5,
             cost: 150,
-            damageMax: 52,
-            damageMin: 39,
+            damageMax: 40,
+            damageMin: 30,
             range: 3.25,
             blastRadius: 1.2,
-            get visual() { return t4_1Image; }, // 防御塔的样式图片
+            get visual() { return t4_1Image; }, // Style image of defense tower
 
             upgrades: [
                 {
                     name: 'trebuchet MAX Tower',
                     title: 'Trebuchet MAX Tower',
-                    cooldownMax: 152,
-                    cooldownMin: 109,
+                    cooldownMax: 152*1.5,
+                    cooldownMin: 109*1.5,
                     cost: 220,
-                    damageMax: 68,
-                    damageMin: 51,
+                    damageMax: 50,
+                    damageMin: 40,
                     range: 3.5,
                     blastRadius: 1.5,
-                    get visual() { return t4_3Image; }, // 防御塔的样式图片
+                    get visual() { return t4_3Image; }, // Style image of defense tower
                 }
             ]
         }
@@ -278,74 +276,74 @@ tower.trebuchet = {
 
 // ================================================================ Laser AA Tower ================================================================
 tower.laser = {
-    // Display
-    color: [25, 181, 254], // 蓝色激光
+// Display
+    color: [25, 181, 254], // Blue laser
     length: 0.55,
     radius: 0.8,
-    secondary: [149, 165, 166], // 次要颜色
+    secondary: [149, 165, 166], // Secondary color
     width: 0.25,
-    weight: 2, // 初始线条粗细
-    drawLine: true, // 绘制弹道线
-    follow: true, // 跟踪目标
-    get visual() { return t5_1Image; }, // 防御塔的样式图片
+    weight: 2, // Initial line thickness
+    drawLine: true, // Draw trajectory line
+    follow: true, // Track target
+    get visual() { return t5_1Image; }, // Style image of defense tower
 
-    // Misc
+// Misc
     name: 'Laser AA Tower',
     title: 'Laser AA Tower',
-    sound: 'laser', // 攻击音效
+    sound: 'laser', // Attack sound
 
-    // Stats
+// Stats
     cooldownMax: 24,
-    cooldownMin: 12,    
+    cooldownMin: 12,
     cost: 150,
-    damageMax: 3,
-    damageMin: 2,
+    damageMax: 0.6,
+    damageMin: 0.4,
     range: 3,
     type: 'energy',
 
-    // 闪烁效果计数器
+// Flash effect counter
     flashCounter: 0,
     draw: function() {
         push();
         imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// Draw the texture according to the radius of the tower and the global ts scale
         image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw the upgrade button
         pop();
     },
 
     frameIndex: 0,
     frameNumbers: 7,
-    // 攻击逻辑
+// Attack logic
     onAim: function(e) {
         if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y);
         if (!this.canFire()) return;
 
-        // 攻击目标
+// Attack target
         this.attack(e);
 
-        // 绘制弹道线
+// Draw trajectory line
         if (this.drawLine) {
-            // 计算弹道线粗细和颜色
+// Calculate trajectory line thickness and color
             let weight = this.calculateWeight();
             let color = this.calculateColor();
 
-            // 绘制弹道线
+// Draw trajectory line
             stroke(color);
             strokeWeight(weight);
             line(this.pos.x, this.pos.y, e.pos.x, e.pos.y);
-            strokeWeight(1); // 恢复默认线条粗细
-            //
+            strokeWeight(1); // Restore default line thickness
+//
             var dir = atan2(e.pos.y - this.pos.y, e.pos.x - this.pos.x);
             var distance = dist(e.pos.x, e.pos.y, this.pos.x, this.pos.y);
 
-            // 画两条闪电
+// Draw two lightning bolts
             push();
             translate(this.pos.x, this.pos.y);
             rotate(dir);
-           
+
             let lightning = imgAttackLightning;
             let frameWidth = lightning.width / this.frameNumbers;
             let frameHeight = lightning.height;
@@ -361,7 +359,7 @@ tower.laser = {
 
             pop();
 
-            // 添加光晕效果
+//Add halo effect
             this.addGlow(e);
 
             if (frameCount % 5 == 0)
@@ -370,113 +368,132 @@ tower.laser = {
             }
         }
 
-        // 更新闪烁计数器
+// Update flash counter
         this.flashCounter++;
     },
-
-    // 计算弹道线粗细
+    // Calculate the thickness of the trajectory
     calculateWeight: function() {
-        // 每 20 帧一个完整的闪烁周期
+// A complete flash cycle every 20 frames
         let cycle = this.flashCounter % 20;
 
         if (cycle < 10) {
-            // 前 10 帧：从初始粗细逐渐变粗
-            return this.weight + (cycle / 10) * 4; // 最大粗细为初始粗细 + 4
+// First 10 frames: gradually thicken from the initial thickness
+            return this.weight + (cycle / 10) * 4; // Maximum thickness is initial thickness + 4
         } else {
-            // 后 10 帧：从最大粗细逐渐变细
+// After 10 frames: gradually thin from the maximum thickness
             return this.weight + ((20 - cycle) / 10) * 4;
         }
     },
 
-    // 计算弹道线颜色
+// Calculate the color of the trajectory
     calculateColor: function() {
-        // 每 20 帧一个完整的颜色变化周期
+// A complete color change cycle every 20 frames
         let cycle = this.flashCounter % 20;
-        let r = 25 + 230 * abs(sin((cycle / 20) * TWO_PI)); // 红色分量
-        let g = 181 + 74 * abs(sin((cycle / 20) * TWO_PI)); // 绿色分量
-        let b = 254; // 蓝色分量固定
+        let r = 25 + 230 * abs(sin((cycle / 20) * TWO_PI)); // Red component
+        let g = 181 + 74 * abs(sin((cycle / 20) * TWO_PI)); // Green component
+        let b = 254; // Blue component is fixed
         return [r, g, b];
     },
 
-    // 添加光晕效果
+// Add glow effect
     addGlow: function(e) {
         push();
         noStroke();
-        fill(this.color[0], this.color[1], this.color[2], 50); // 半透明光晕
-        ellipse(e.pos.x, e.pos.y, 20, 20); // 光晕大小
+        fill(this.color[0], this.color[1], this.color[2], 50); // Translucent glow
+        ellipse(e.pos.x, e.pos.y, 20, 20); // Glow size
         pop();
     },
 
-    // 攻击方法
+// Attack method
     attack: function(e) {
-        var damage = round(random(this.damageMin, this.damageMax));
-        e.dealDamage(damage, this.type);
-        if (sounds.hasOwnProperty(this.sound)) {
-            sounds[this.sound].play();
+        if(frameCount%2==0) {
+            var damage = round(random(this.damageMin, this.damageMax));
+            e.dealDamage(damage, this.type);
+            if (sounds.hasOwnProperty(this.sound)) {
+                sounds[this.sound].play();
+            }
+            this.onHit(e);
         }
-        this.onHit(e);
+
     },
 
-    // 使用 Tower 基类默认的 target 方法（在可见范围内选择目标）
+// Use the default target method of the Tower base class (select a target within the visible range)
     target: Tower.prototype.target,
 
-    // 升级选项
+// Upgrade options
     upgrades: [
         {
-            // Display
-            get visual() { return t5_2Image; }, // 防御塔的样式图片
+// Display
+            get visual() { return t5_2Image; }, // Style image of the defense tower
 
-            // Misc
+// Misc
             name: 'Laser AA PLUS Tower ',
             title: 'Laser AA PLUS Tower',
 
-            // Stats
-            cooldownMax: 20,
-            cooldownMin: 10,    
+// Stats
+            cooldownMax: 24,
+            cooldownMin: 12,
             cost: 200,
-            damageMax: 4,
-            damageMin: 3,
+            damageMax: 0.6,
+            damageMin: 0.5,
+
             range: 3.5,
-            
-            // 升级后的攻击逻辑
+
+// Attack logic after upgrade
             attack: function(e) {
-                if (this.lastTarget === e) {
-                    this.duration++;
-                } else {
-                    this.lastTarget = e;
-                    this.duration = 0;
+                if(frameCount%20==0) {
+                    if (this.lastTarget === e) {
+                        this.duration++;
+                    } else {
+                        this.lastTarget = e;
+                        this.duration = 0;
+                    }
+
+                    var d = random(this.damageMin, this.damageMax);
+                    var damage = d * sq(this.duration);
+                    e.dealDamage(damage, this.type);
+                    this.onHit(e);
                 }
-                var d = random(this.damageMin, this.damageMax);
-                var damage = d * sq(this.duration);
-                e.dealDamage(damage, this.type);
-                this.onHit(e);
             },
             upgrades:[
                 {
-                    // Display
-                    get visual() { return t5_3Image; }, // 防御塔的样式图片
+// Display
+                    get visual() { return t5_3Image; }, // Style image of defense tower
 
-                    // Misc
+// Misc
                     name: 'Laser AA MAX Tower',
                     title: 'Laser AA MAX Tower',
-                    sound: 'laser', // 攻击音效
+                    sound: 'laser', // Attack sound
 
-                    // Stats
-                    cooldownMax: 17,
-                    cooldownMin: 9,    
+// Stats
+                    cooldownMax: 24,
+                    cooldownMin: 12,
                     cost: 300,
-                    damageMax: 5,
-                    damageMin: 4,
+                    damageMax: 0.7,
+                    damageMin: 0.6,
                     range: 4,
 
-                    // 攻击方法
+// Attack method
                     attack: function(e) {
-                        var damage = round(random(this.damageMin, this.damageMax));
-                        e.dealDamage(damage, this.type);
-                        if (sounds.hasOwnProperty(this.sound)) {
-                            sounds[this.sound].play();
+                        if(frameCount%20==0) {
+                            if (this.lastTarget === e) {
+                                this.duration++;
+                            } else {
+                                this.lastTarget = e;
+                                this.duration = 0;
+                            }
+
+                            var d = random(this.damageMin, this.damageMax);
+                            var damage = d * sq(this.duration);
+                            e.dealDamage(damage, this.type);
+                            if (sounds.hasOwnProperty(this.sound)) {
+                                sounds[this.sound].play();
+                            }
+                            this.onHit(e);
+
+
+
                         }
-                        this.onHit(e);
                     },
                 }
             ]
@@ -484,275 +501,137 @@ tower.laser = {
     ]
 };
 
-// tower.laserfire = {
-//     // Display
-//     color: [254, 81, 25], //
-//     length: 0.55,
-//     radius: 0.8,
-//     secondary: [166, 65, 99], // 次要颜色
-//     width: 0.25,
-//     weight: 2, // 初始线条粗细
-//     drawLine: true, // 绘制弹道线
-//     follow: true, // 跟踪目标
-//
-//     name: 'laserfire',
-//     title: 'Laserfire Tower',
-//     sound: 'laserfire', // 攻击音效
-//
-//     // Stats
-//     cooldownMax: 1, // 攻击冷却时间
-//     cost: 75, // 建造价格
-//     damageMax: 3, // 最大伤害
-//     range: 2, // 攻击范围
-//     type: 'energy', // 伤害类型
-//
-//     // 闪烁效果计数器
-//     flashCounter: 0,
-//
-//     // 攻击逻辑
-//     onAim: function(e) {
-//         if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y);
-//         if (!this.canFire()) return;
-//
-//         // 攻击目标
-//         this.attack(e);
-//
-//         // 绘制弹道线
-//         if (this.drawLine) {
-//             // 计算弹道线粗细和颜色
-//             let weight = this.calculateWeight();
-//             let color = this.calculateColor();
-//
-//             // 绘制弹道线
-//             stroke(color);
-//             strokeWeight(weight);
-//             line(this.pos.x, this.pos.y, e.pos.x, e.pos.y);
-//             strokeWeight(1); // 恢复默认线条粗细
-//
-//             // 添加光晕效果
-//             this.addGlow(e);
-//         }
-//
-//         // 更新闪烁计数器
-//         this.flashCounter++;
-//     },
-//
-//     // 计算弹道线粗细
-//     calculateWeight: function() {
-//         // 每 20 帧一个完整的闪烁周期
-//         let cycle = this.flashCounter % 20;
-//
-//         if (cycle < 10) {
-//             // 前 10 帧：从初始粗细逐渐变粗
-//             return this.weight + (cycle / 10) * 4; // 最大粗细为初始粗细 + 4
-//         } else {
-//             // 后 10 帧：从最大粗细逐渐变细
-//             return this.weight + ((20 - cycle) / 10) * 4;
-//         }
-//     },
-//
-//     // 计算弹道线颜色
-//     calculateColor: function() {
-//         // 每 20 帧一个完整的颜色变化周期
-//         let cycle = this.flashCounter % 20;
-//         let r = 200 + 55 * abs(sin((cycle / 20) * TWO_PI)); // 红色分量
-//         let g = 50 + 104 * abs(sin((cycle / 20) * TWO_PI)); // 绿色分量
-//         let b = 2; // 蓝色分量固定
-//         return [r, g, b];
-//     },
-//
-//     // 添加光晕效果
-//     addGlow: function(e) {
-//         push();
-//         noStroke();
-//         fill(this.color[0], this.color[1], this.color[2], 50); // 半透明光晕
-//         ellipse(e.pos.x, e.pos.y, 20, 20); // 光晕大小
-//         pop();
-//     },
-//
-//     // 攻击方法
-//     attack: function(e) {
-//         var damage = round(random(this.damageMin, this.damageMax));
-//         e.dealDamage(damage, this.type);
-//         if (sounds.hasOwnProperty(this.sound)) {
-//             sounds[this.sound].play();
-//         }
-//         this.onHit(e);
-//     },
-//
-//     // 使用 Tower 基类默认的 target 方法（在可见范围内选择目标）
-//     target: Tower.prototype.target,
-//
-//     // 升级选项
-//     upgrades: [
-//         {
-//             // Display
-//             color: [178, 55, 96], // 升级后的颜色
-//             length: 0.65,
-//             radius: 0.9,
-//             secondary: [191, 191, 191], // 升级后的次要颜色
-//             weight: 3, // 升级后的初始线条粗细
-//             width: 0.35,
-//
-//             // Misc
-//             name: 'beamEmitter',
-//             title: 'Beam Emitter',
-//
-//             // Stats
-//             cooldownMax: 0, // 升级后无冷却
-//             cost: 200, // 升级价格
-//             damageMax: 0.1, // 升级后的最大伤害
-//             damageMin: 0.001, // 升级后的最小伤害
-//             range: 3, // 升级后的攻击范围
-//
-//             // 升级后的攻击逻辑
-//             attack: function(e) {
-//                 if (this.lastTarget === e) {
-//                     this.duration++;
-//                 } else {
-//                     this.lastTarget = e;
-//                     this.duration = 0;
-//                 }
-//                 var d = random(this.damageMin, this.damageMax);
-//                 var damage = d * sq(this.duration);
-//                 e.dealDamage(damage, this.type);
-//                 this.onHit(e);
-//             }
-//         }
-//     ]
-// };
-
 // ================================================================ slow Tower ================================================================
 tower.slow = {
-    // Display
+// Display
     baseOnTop: false,
-    color: [75, 119, 190], // 底色
+    color: [75, 119, 190], // Base color
     drawLine: false,
     length: 1.1,
     radius: 0.9,
-    secondary: [189, 195, 199], // 次要颜色
+    secondary: [189, 195, 199], // Secondary color
     width: 0.3,
-    get visual() { return t3_1Image; }, // 防御塔的样式图片
-    // Misc
+    get visual() { return t3_1Image; }, // Style image of defense tower
+// Misc
     name: 'slow',
     title: 'Slow Tower',
-    // Stats
+// Stats
     cooldownMax: 90,
     cooldownMin: 60,
     cost: 60,
     damageMax: 0,
     damageMin: 0,
-    range: 3, // 作用范围
+    range: 3, // Range
     type: 'slow',
 
-    // 波动效果计数器
+// Wave effect counter
     waveCounter: 0,
     draw: function() {
         push();
         imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// Draw the texture according to the radius of the tower and the global ts scale
         image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw the upgrade button
         pop();
     },
 
-    // Methods
+// Methods
     drawBarrel: function() {
-        // fill(this.secondary);
-        // var back = -this.length * ts / 2;
-        // var side = this.width * ts / 2;
-        // rect(back, -side, this.length * ts, this.width * ts);
+// fill(this.secondary);
+// var back = -this.length * ts / 2;
+// var side = this.width * ts / 2;
+// rect(back, -side, this.length * ts, this.width * ts);
     },
 
-    // 攻击逻辑
+// Attack logic
     onAim: function(e) {
         this.attack(e);
     },
 
-    // 攻击效果
+// Attack effect
     onHit: function(e) {
         e.doEffect('slow', 40);
     },
 
-    // 目标选择
+// Target selection
     target: function(entities) {
         entities = this.visible(entities);
         if (entities.length === 0) return;
         if (!this.canFire()) return;
         this.resetCooldown();
 
-        // 绘制底色和波动效果
+// Draw the background color and wave effect
         this.drawEffect();
 
-        // 对范围内的所有敌人应用效果
+// Apply the effect to all enemies in range
         for (var i = 0; i < entities.length; i++) {
             let monster = entities[i];
             let d = dist(this.pos.x, this.pos.y, monster.pos.x, monster.pos.y);
-            if (d <= this.range * ts) { // 确保敌人在作用范围内
+            if (d <= this.range * ts) { // Make sure the enemy is in range
                 this.onAim(monster);
             }
         }
     },
 
-    // 绘制底色和波动效果
+// Draw background color and wave effect
     drawEffect: function() {
-        // 绘制底色
+// Draw background color
         noStroke();
-        fill(this.color[0], this.color[1], this.color[2], 50); // 半透明底色
+        fill(this.color[0], this.color[1], this.color[2], 50); // Translucent background color
         ellipse(this.pos.x, this.pos.y, this.range * 2 * ts, this.range * 2 * ts);
 
-        // 绘制波动效果
-        let waveRadius = (this.waveCounter % 40) / 40 * this.range * ts; // 波动半径（频率提高 1.5 倍）
+// Draw wave effect
+        let waveRadius = (this.waveCounter % 40) / 40 * this.range * ts; // Wave radius (frequency increased by 1.5 times)
         noFill();
-        stroke(255, 255, 255, 100); // 波动颜色为白色，半透明
+        stroke(255, 255, 255, 100); // Wave color is white, translucent
         strokeWeight(2);
         ellipse(this.pos.x, this.pos.y, waveRadius * 2, waveRadius * 2);
 
-        // 更新波动计数器
+// Update wave counter
         this.waveCounter++;
     },
 
-    // 更新逻辑
+// Update logic
     update() {
         this.angle += PI / 60;
         if (this.cd > 0) this.cd--;
     },
 
-    // 升级选项
+// Upgrade options
     upgrades: [
         {
-            // Display
-            get visual() { return t3_2Image; }, // 防御塔的样式图片
+// Display
+            get visual() { return t3_2Image; }, // Style image of defense tower
 
-            // Misc
+// Misc
             name: 'slow',
             title: 'Slow Tower',
-            // Stats
+// Stats
             cooldownMax: 75,
             cooldownMin: 50,
             cost: 80,
             damageMax: 0,
             damageMin: 0,
-            range: 3, // 作用范围
+            range: 3, // Range
 
-            // 升级选项
+// Upgrade options
             upgrades: [
                 {
-                    // Display
-                    get visual() { return t3_3Image; }, // 防御塔的样式图片
+// Display
+                    get visual() { return t3_3Image; }, // Style image of defense tower
 
-                    // Misc
+// Misc
                     name: 'slow',
                     title: 'Slow Tower',
-                    // Stats
+// Stats
                     cooldownMax: 65,
                     cooldownMin: 40,
                     cost: 120,
                     damageMax: 0,
                     damageMin: 0,
-                    range: 3, // 作用范围
+                    range: 3, // range
                 }
             ]
         }
@@ -761,23 +640,23 @@ tower.slow = {
 
 // ================================================================ Cannon Tower ================================================================
 tower.bomb = {
-    // Display
+// Display
     baseOnTop: false,
     color: [102, 51, 153],
     drawLine: false,
     length: 0.6,
     width: 0.35,
     secondary: [103, 128, 159],
-    get visual() { return t4_1Image; }, // 防御塔的样式图片
-    // Misc
+    get visual() { return t4_1Image; }, // Style image of defense tower
+// Misc
     name: 'Cannon Tower',
     title: 'Cannon Tower',
-    // Stats
-    cooldownMax: 180,
-    cooldownMin: 120,
+// Stats
+    cooldownMax: 180*1.5,
+    cooldownMin: 120*1.5,
     cost: 100,
-    damageMax: 30,
-    damageMin: 20,
+    damageMax: 20,
+    damageMin: 10,
     range: 2,
     blastRadius: 1,
     particleAmt: 1,
@@ -786,25 +665,25 @@ tower.bomb = {
     draw: function() {
         push();
         imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// Draw the texture according to the radius of the tower and the global ts scale
         image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw the upgrade button
         pop();
     },
-    // Methods
+// Methods
     drawBarrel: function() {
-        // fill(this.secondary);
-        // rect(0, -this.width * ts / 2, this.length * ts, this.width * ts);
-        // fill(191, 85, 236);
-        // ellipse(0, 0, this.radius * ts * 2 / 3, this.radius * ts * 2 / 3);
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+// fill(this.secondary);
+// rect(0, -this.width * ts / 2, this.length * ts, this.width * ts);
+// fill(191, 85, 236);
+// ellipse(0, 0, this.radius * ts * 2 / 3, this.radius * ts * 2 / 3);
+// Draw the map based on the radius of the tower and the global ts scale
 
-        // push();
-        // imageMode(CENTER);
-        // image(t3_1Image, 0, 0, ts,ts);
-        // pop();
+// push();
+// imageMode(CENTER);
+// image(t3_1Image, 0, 0, ts,ts);
+// pop();
     },
     onHit: function(e) {
         var s = new CannonExplosion(e.pos.x, e.pos.y, this.particleAmt);
@@ -819,36 +698,36 @@ tower.bomb = {
     },
     upgrades: [
         {
-            // Display
+// Display
             radius: 1.1,
-            get visual() { return t4_2Image; }, // 防御塔的样式图片
-            // Misc
+            get visual() { return t4_2Image; }, // Style image of defense tower
+// Misc
             name: 'Cannon PLUS Tower',
             title: 'Cannon PLUS Tower',
-            // Stats
-            cooldownMax: 153,
-            cooldownMin: 102,
+// Stats
+            cooldownMax: 153*1.5,
+            cooldownMin: 102*1.5,
             cost: 120,
-            damageMax: 39,
-            damageMin: 26,
+            damageMax: 30,
+            damageMin: 20,
             range: 2.2,
             particleAmt: 4,
-            
+
             upgrades:[
                 {
-                    // Display
+// Display
                     radius: 1.1,
-                    get visual() { return t4_3Image; }, // 防御塔的样式图片
+                    get visual() { return t4_3Image; }, // Style image of defense tower
 
-                    // Misc
+// Misc
                     name: 'Cannon MAX Tower',
                     title: 'Cannon MAX Tower',
-                    // Stats
-                    cooldownMax: 130,
-                    cooldownMin: 87,
+// Stats
+                    cooldownMax: 130*1.5,
+                    cooldownMin: 87*1.5,
                     cost: 180,
-                    damageMax: 51,
-                    damageMin: 34,
+                    damageMax: 40,
+                    damageMin: 30,
                     range: 2.5,
                     particleAmt: 6,
                 }
@@ -859,133 +738,133 @@ tower.bomb = {
 
 // ================================================================ slow2 Tower ================================================================
 tower.slow2 = {
-    // Display
+// Display
     baseOnTop: false,
-    color: [75, 119, 190], // 底色
+    color: [75, 119, 190], // Base color
     drawLine: false,
     length: 1.1,
     radius: 0.9,
-    secondary: [189, 195, 199], // 次要颜色
+    secondary: [189, 195, 199], // Secondary color
     width: 0.3,
-    get visual() { return t7_1Image; }, // 防御塔的样式图片
-    // Misc
+    get visual() { return t7_1Image; }, // Style image of defense tower
+// Misc
     name: 'slow2',
     title: 'Slow Tower',
-    // Stats
+// Stats
     cooldownMax: 0,
     cooldownMin: 0,
     cost: 150,
     damageMax: 0,
     damageMin: 0,
-    range: 3, // 作用范围
+    range: 3, // Range
     type: 'slow2',
 
-    // 波动效果计数器
+// Wave effect counter
     waveCounter: 0,
     draw: function() {
         push();
         imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// Draw the texture according to the radius of the tower and the global ts scale
         image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw the upgrade button
         pop();
     },
 
-    // Methods
+// Methods
     drawBarrel: function() {
-        // fill(this.secondary);
-        // var back = -this.length * ts / 2;
-        // var side = this.width * ts / 2;
-        // rect(back, -side, this.length * ts, this.width * ts);
+// fill(this.secondary);
+// var back = -this.length * ts / 2;
+// var side = this.width * ts / 2;
+// rect(back, -side, this.length * ts, this.width * ts);
     },
 
-    // 攻击逻辑
+// Attack logic
     onAim: function(e) {
         this.attack(e);
     },
 
-    // 攻击效果
+// Attack effect
     onHit: function(e) {
         e.doEffect('slow2', 40);
     },
 
-    // 目标选择
+// Target selection
     target: function(entities) {
         entities = this.visible(entities);
         if (entities.length === 0) return;
         if (!this.canFire()) return;
         this.resetCooldown();
 
-        // 绘制底色和波动效果
+// Draw the background color and wave effect
         this.drawEffect();
 
-        // 对范围内的所有敌人应用效果
+// Apply the effect to all enemies in range
         for (var i = 0; i < entities.length; i++) {
             let monster = entities[i];
             let d = dist(this.pos.x, this.pos.y, monster.pos.x, monster.pos.y);
-            if (d <= this.range * ts) { // 确保敌人在作用范围内
+            if (d <= this.range * ts) { // Make sure the enemy is in range
                 this.onAim(monster);
             }
         }
     },
 
-    // 绘制底色和波动效果
+// Draw background color and wave effect
     drawEffect: function() {
-        // 绘制底色
+// Draw background color
         noStroke();
-        fill(this.color[0], this.color[1], this.color[2], 50); // 半透明底色
+        fill(this.color[0], this.color[1], this.color[2], 50); // Translucent background color
         ellipse(this.pos.x, this.pos.y, this.range * 2 * ts, this.range * 2 * ts);
 
-        // 绘制波动效果
-        let waveRadius = (this.waveCounter % 40) / 40 * this.range * ts; // 波动半径（频率提高 1.5 倍）
+// Draw wave effect
+        let waveRadius = (this.waveCounter % 40) / 40 * this.range * ts; // Wave radius (frequency increased by 1.5 times)
         noFill();
-        stroke(255, 255, 255, 100); // 波动颜色为白色，半透明
+        stroke(255, 255, 255, 100); // Wave color is white, translucent
         strokeWeight(2);
         ellipse(this.pos.x, this.pos.y, waveRadius * 2, waveRadius * 2);
 
-        // 更新波动计数器
+// Update wave counter
         this.waveCounter++;
     },
 
-    // 更新逻辑
+// Update logic
     update() {
         this.angle += PI / 60;
         if (this.cd > 0) this.cd--;
     },
 
-    // 升级选项
+// Upgrade options
     upgrades: [
         {
-            // Display
-            get visual() { return t7_2Image; }, // 防御塔的样式图片
-            // Misc
+// Display
+            get visual() { return t7_2Image; }, // Style image of defense tower
+// Misc
             name: 'slow2',
             title: 'Slow Tower',
-            // Stats
+// Stats
             cooldownMax: 0,
             cooldownMin: 0,
             cost: 120,
             damageMax: 0,
             damageMin: 0,
-            range: 3.25, // 作用范围
+            range: 3.25, // Range
 
-            // 升级选项
+// Upgrade options
             upgrades: [
                 {
-                    // Display
-                    get visual() { return t7_3Image; }, // 防御塔的样式图片
-                    // Misc
+// Display
+                    get visual() { return t7_3Image; }, // Style image of defense tower
+// Misc
                     name: 'slow',
                     title: 'Slow Tower',
-                    // Stats
+// Stats
                     cooldownMax: 52,
                     cooldownMin: 33,
                     cost: 180,
                     damageMax: 0,
                     damageMin: 0,
-                    range: 3.5, // 作用范围
+                    range: 3.5, // range
                 }
             ]
         }
@@ -994,29 +873,27 @@ tower.slow2 = {
 
 // ================================================================ EMP Tower ================================================================
 tower.emp = {
-    // Display
-    color: [255, 245, 45], // 底色
-    get visual() { return t6_1Image; }, // 防御塔的样式图片
-    // Misc
+// Display
+    color: [255, 245, 45], // background color
+    get visual() { return t6_1Image; }, // style image of defense tower
+// Misc
     name: 'EMP',
     title: 'EMP Tower',
-    // Stats
+// Stats
     cooldownMax: 0,
     cooldownMin: 0,
     cost: 200,
     damageMax: 0,
     damageMin: 0,
-    range: 3,       // 作用范围
-    speed: 0.01,    // 速度
-    radian: PI / 6,  // 弧度
+    range: 3, // range
+    speed: 0.01, // speed
+    radian: PI / 6, // radians
     type: 'stun',
-    stunnedDuration: 150, // 麻痹时长
-    
-    
-    angleOffset: 0,      // 当前旋转的角度
+    stunnedDuration: 150, // paralysis duration
+    angleOffset: 0, // current rotation angle
     draw: function() {
-        
-        // 绘制干扰范围的弧形
+
+// draw the arc of the interference range
         push();
         translate(this.pos.x, this.pos.y);
         rotate(this.angleOffset);
@@ -1028,16 +905,16 @@ tower.emp = {
 
         pop();
 
-        // 绘制塔
+// Draw tower
         imageMode(CENTER);
-        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // 被选中时效果
-        // 根据塔的 radius 和全局 ts 缩放绘制贴图
+        if (this.selected == true) this.diaplayRange(this.pos.x, this.pos.y); // Effect when selected
+// Draw texture according to the radius of the tower and global ts scaling
         image(this.visual, this.pos.x, this.pos.y, ts, ts);
-        this.displayCD(this.pos.x, this.pos.y);   // 绘制cd
-        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3);  //绘制升级按钮
+        this.displayCD(this.pos.x, this.pos.y); // Draw CD
+        this.displayUpgrade(this.pos.x + ts/3, this.pos.y - ts/3); // Draw upgrade button
     },
 
-    // 攻击效果
+// Attack effect
     onHit: function (e) {
         if (e.isStunned == false)
         {
@@ -1046,9 +923,9 @@ tower.emp = {
         }
     },
 
-    // 目标选择
+// Target selection
     target: function(entities) {
-        // 判断击中敌人
+// Determine whether the enemy is hit
         entities = this.visible(entities);
         let startAngle = this.angleOffset;
         let endAngle = this.angleOffset + this.radian;
@@ -1060,37 +937,37 @@ tower.emp = {
         }
     },
 
-    // 更新逻辑
+//Update logic
     update() {
         this.angleOffset = (this.angleOffset + this.speed) % TWO_PI;
     },
 
-    // 升级选项
+// Upgrade options
     upgrades: [
         {
-            get visual() { return t6_2Image; }, // 防御塔的样式图片
-            // Misc
+            get visual() { return t6_2Image; }, // Style image of defense tower
+// Misc
             name: 'EMP PLUS',
             title: 'EMP PLUS Tower',
-            // Stats
+// Stats
             cost: 250,
-            range: 2.5,       // 作用范围
-            speed: 0.02,    // 速度
-            radian: PI / 4,  // 弧度
-            stunnedDuration: 200, // 麻痹时长
+            range: 2.5, // Range
+            speed: 0.02, // Speed
+            radian: PI / 4, // Radians
+            stunnedDuration: 200, // Paralysis duration
 
             upgrades: [
                 {
-                    get visual() { return t6_3Image; }, // 防御塔的样式图片
-                    // Misc
+                    get visual() { return t6_3Image; }, // Style image of defense tower
+// Misc
                     name: 'EMP MAX',
                     title: 'EMP MAX Tower',
-                    // Stats
+// Stats
                     cost: 350,
-                    range: 3,       // 作用范围
-                    speed: 0.03,    // 速度
-                    radian: PI / 2,  // 弧度
-                    stunnedDuration: 300, // 麻痹时长
+                    range: 3, // Range
+                    speed: 0.03, // speed
+                    radian: PI / 2, // radians
+                    stunnedDuration: 300, // paralysis duration
                 }
             ]
         }

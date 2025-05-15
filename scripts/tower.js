@@ -1,86 +1,85 @@
-class Tower {  // 创建塔的类
-    constructor(col, row) {  // 构造函数，初始化塔的位置和属性
-        // Display  // 渲染相关
-        this.baseOnTop = true;      // 是否在炮管上方绘制塔基
-        this.color = [0, 0, 0];     // 主色
-        this.drawLine = true;       // 是否绘制攻击目标的连线
-        this.follow = true;         // 是否跟随目标，即使不攻击
-        this.hasBarrel = true;      // 是否有炮管
-        this.hasBase = true;        // 是否有塔基
-        this.length = 0.7;          // 炮管长度（以瓦片为单位）
-        this.radius = 1;            // 塔基半径（以瓦片为单位）
-        this.secondary = [0, 0, 0]; // 辅助色
-        this.weight = 2;            // 激光描边宽度
-        this.width = 0.3;           // 炮管宽度（以瓦片为单位）
+class Tower {
+    constructor(col, row) { // Constructor, initialize the position and properties of the tower
+        this.baseOnTop = true; // Whether to draw the tower base above the barrel
+        this.color = [0, 0, 0]; // Primary color
+        this.drawLine = true; // Whether to draw the line connecting the attack target
+        this.follow = true; // Whether to follow the target, even if not attacking
+        this.hasBarrel = true; // Whether there is a barrel
+        this.hasBase = true; // Whether there is a tower base
+        this.length = 0.7; // Barrel length (in tiles)
+        this.radius = 1; // Tower base radius (in tiles)
+        this.secondary = [0, 0, 0]; // Secondary color
+        this.weight = 2; // Laser stroke width
+        this.width = 0.3; // Barrel width (in tiles)
         this.health = 10;
 
-        // Misc  // 杂项
-        this.alive = true;          // 塔是否存活
-        this.name = 'tower';        // 塔的名称
-        this.sound = null;          // 发射时播放的声音
-        this.title = 'Tower';       // 塔的标题
-        this.selected = false;      // 是否被选中
+// Misc // Miscellaneous
+        this.alive = true; // Is the tower alive?
+        this.name = 'tower'; // Name of the tower
+        this.sound = null; // Sound played when launching
+        this.title = 'Tower'; // Title of the tower
+        this.selected = false; // Is it selected?
 
-        // Position  // 塔的位置
-        this.angle = 0;             // 塔的角度
-        this.gridPos = createVector(col, row);  // 格子位置
-        this.pos = createVector(col*ts + ts/2, row*ts + ts/2);  // 屏幕位置
+// Position // Position of the tower
+        this.angle = 0; // Angle of the tower
+        this.gridPos = createVector(col, row); // Grid position
+        this.pos = createVector(col*ts + ts/2, row*ts + ts/2); // Screen position
 
-        // Stats  // 塔的属性
-        this.cooldown = 0.01;       // 冷却时间
-        this.cooldownMax = 0;       // 最大冷却时间
-        this.cooldownMin = 0;       // 最小冷却时间
-        this.cost = 0;              // 塔的购买成本
-        this.damageMax = 20;        // 最大伤害
-        this.damageMin = 1;         // 最小伤害
-        this.range = 3;             // 攻击范围（瓦片单位）
-        this.totalCost = 0;         // 总成本
-        this.type = 'physical';     // 伤害类型
-        this.upgrades = [];         // 升级列表
+// Stats // Properties of the tower
+        this.cooldown = 0.01; // Cooldown time
+        this.cooldownMax = 0; // Maximum cooldown time
+        this.cooldownMin = 0; // Minimum cooldown time
+        this.cost = 0; // Purchase cost of the tower
+        this.damageMax = 20; // Maximum damage
+        this.damageMin = 1; // Minimum damage
+        this.range = 3; // Attack range (tile units)
+        this.totalCost = 0; // Total cost
+        this.type = 'physical'; // Damage type
+        this.upgrades = []; // Upgrade list
     }
 
-    // Adjust angle to point towards pixel position  // 调整角度指向目标
+    // Adjust angle to point towards pixel position
     aim(x, y) {
-        this.angle = atan2(y - this.pos.y, x - this.pos.x);  // 计算角度
+        this.angle = atan2(y - this.pos.y, x - this.pos.x); // Calculate angle
     }
 
-    // Deal damage to monster  // 对怪物造成伤害
+// Deal damage to monster // Deal damage to monster
     attack(e) {
 
-        var damage = round(random(this.damageMin, this.damageMax));  // 随机伤害
-        e.dealDamage(damage, this.type);  // 伤害怪物
-        if (sounds.hasOwnProperty(this.sound)) {  // 如果有声音，播放声音
+        var damage = round(random(this.damageMin, this.damageMax)); // Random damage
+        e.dealDamage(damage, this.type); // Damage monster
+        if (sounds.hasOwnProperty(this.sound)) { // If there is sound, play the sound
             sounds[this.sound].play();
         }
-        this.onHit(e);  // 对目标进行后续操作
+        this.onHit(e); // Perform subsequent operations on the target
     }
 
-    // Check if cooldown is completed  // 检查冷却时间是否完成
+// Check if cooldown is completed // Check if the cooling time is completed
     canFire() {
-        return this.cd === 0;  // 如果冷却时间为0，表示可以攻击
+        return this.cd === 0; // If the cooling time is 0, it means that you can attack
     }
 
-    // 辅助深克隆方法
+// Auxiliary deep cloning method
     deepClone(obj, hash = new WeakMap()) {
-        // 基本类型直接返回
+// Return the basic type directly
         if (obj === null || typeof obj !== 'object') return obj;
 
-        // 如果已经克隆过，直接返回克隆后的对象
+// If it has been cloned, return the cloned object directly
         if (hash.has(obj)) return hash.get(obj);
 
         let clone;
 
-        // 处理数组
+// Process arrays
         if (Array.isArray(obj)) {
             clone = [];
-            hash.set(obj, clone); // 记录当前对象
+            hash.set(obj, clone); // Record the current object
             clone = obj.map(item => this.deepClone(item, hash));
             return clone;
         }
 
-        // 处理普通对象
+// Process ordinary objects
         clone = {};
-        hash.set(obj, clone); // 记录当前对象
+        hash.set(obj, clone); // Record the current object
 
         for (const key in obj) {
             if (obj.hasOwnProperty(key)) {
@@ -91,171 +90,170 @@ class Tower {  // 创建塔的类
         return clone;
     }
     copyTower(template) {
-        // 如果没有传入模板，使用空对象
+// If no template is passed, use an empty object
         template = typeof template === 'undefined' ? {} : template;
 
-        // 获取模板的所有键
+// Get all keys of the template
         var keys = Object.keys(template);
 
         for (var i = 0; i < keys.length; i++) {
             var key = keys[i];
             var value = template[key];
 
-            // 深克隆逻辑
+// Deep cloning logic
             if (value && typeof value === 'object') {
-                // 如果是数组，创建新数组并递归克隆元素
+// If it is an array, create a new array and recursively clone the elements
                 if (Array.isArray(value)) {
                     this[key] = value.map(item =>
                         item && typeof item === 'object' ? this.deepClone(item) : item
                     );
                 }
-                // 如果是普通对象，递归克隆
+// If it is a normal object, recursively clone
                 else {
                     this[key] = this.deepClone(value);
                 }
             }
-            // 基本类型直接赋值
+// Direct assignment of basic types
             else {
                 this[key] = value;
             }
         }
     }
-    draw() {  // 绘制塔
-        // Draw turret base  // 绘制塔基
+    draw() { // Draw the tower
+// Draw turret base // Draw the base of the tower
         if (this.hasBase && !this.baseOnTop) this.drawBase();
-        // Draw barrel  // 绘制炮管
+// Draw barrel // Draw the barrel
         if (this.hasBarrel) {
             push();
             translate(this.pos.x, this.pos.y);
-            rotate(this.angle);  // 旋转炮管
-            this.drawBarrel();  // 绘制炮管
+            rotate(this.angle); // Rotate the barrel
+            this.drawBarrel(); // Draw the barrel
             pop();
         }
-        // Draw turret base  // 再次绘制塔基
+// Draw turret base // Draw the base of the tower again
         if (this.hasBase && this.baseOnTop) this.drawBase();
     }
 
-    // Draw barrel of tower (moveable part)  // 绘制塔的炮管（可移动部分）
+// Draw barrel of tower (moveable part) // Draw the barrel of the tower (movable part)
     drawBarrel() {
-        fill(this.secondary);  // 设置填充颜色
-        rect(0, -this.width * ts / 2, this.length * ts, this.width * ts);  // 绘制矩形炮管
+        fill(this.secondary); // Set fill color
+        rect(0, -this.width * ts / 2, this.length * ts, this.width * ts); // Draw a rectangular barrel
     }
 
-    // Draw base of tower (stationary part)  // 绘制塔基（固定部分）
+// Draw base of tower (stationary part) // Draw the tower base (stationary part)
     drawBase() {
-        fill(this.color);  // 设置填充颜色
-        ellipse(this.pos.x, this.pos.y, this.radius * ts, this.radius * ts);  // 绘制椭圆形塔基
+        fill(this.color); // Set fill color
+        ellipse(this.pos.x, this.pos.y, this.radius * ts, this.radius * ts); // Draw an elliptical tower base
     }
 
-    // Returns damage range  // 返回伤害范围
+// Returns damage range // Returns damage range
     getDamage() {
-        return rangeText(this.damageMin, this.damageMax);  // 返回伤害文本
+        return rangeText(this.damageMin, this.damageMax); // Returns damage text
     }
 
-    // Returns average cooldown in seconds  // 返回平均冷却时间（秒）
+// Returns average cooldown in seconds // Returns average cooldown time (seconds)
     getCooldown() {
-        return (this.cooldownMin + this.cooldownMax) / 120;  // 计算冷却时间
+        return (this.cooldownMin + this.cooldownMax) / 120; // Calculate cooldown time
     }
 
-    kill() {  // 将塔标记为死亡
+    kill() { // Mark the tower as dead
         this.alive = false;
     }
 
-    isDead() {  // 检查塔是否死亡
+    isDead() { // Check if the tower is dead
         return !this.alive;
     }
 
-    // Functionality once entity has been targeted  // 目标被选中后的操作
+// Functionality once entity has been targeted // Operation after the target is selected
     onAim(e) {
-        if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y);  // 目标锁定
-        if (!this.canFire()) return;  // 如果不能攻击，返回
-        this.resetCooldown();  // 重置冷却时间
-        this.attack(e);  // 攻击目标
-        // Draw line to target  // 绘制攻击目标的连线
+        if (this.canFire() || this.follow) this.aim(e.pos.x, e.pos.y); // Target locked
+        if (!this.canFire()) return; // If you can't attack, return
+        this.resetCooldown(); // Reset cooldown
+        this.attack(e); // Attack target
+// Draw line to target // Draw the line to attack the target
         if (!this.drawLine) return;
-        stroke(this.color);  // 设置线条颜色
-        strokeWeight(this.weight);  // 设置线条宽度
-        line(this.pos.x, this.pos.y, e.pos.x, e.pos.y);  // 绘制连线
-        strokeWeight(1);  // 重置线条宽度
+        stroke(this.color); // Set line color
+        strokeWeight(this.weight); // Set line width
+        line(this.pos.x, this.pos.y, e.pos.x, e.pos.y); // Draw line
+        strokeWeight(1); // Reset line width
     }
 
-    onCreate() {  // 创建时的初始化
-        this.cd = 0;  // 设置冷却时间为0
+    onCreate() { // Initialization at creation
+        this.cd = 0; // Set cooldown to 0
     }
 
-    onHit(e) {}  // 目标被击中时的操作
+    onHit(e) {} // Operation when the target is hit
 
-    // 塔被攻击时加点效果
-    dealDamage(amt, type) { // 处理伤害
+// Add effect when the tower is attacked
+    dealDamage(amt, type) { // Deal with damage
 
-
-
-        if (this.health > 0) { // 如果生命值大于 0
-            this.health -= amt ; // 计算最终伤害
-
-
-        }
-        if (this.health <= 0) this.kill(); // 如果生命值小于等于 0，调用死亡逻辑
-
+        this.health -= amt ; // Calculate final damage
+//
+// if (this.health > 0) { // If health is greater than 0
+// this.health -= amt ; // Calculate final damage
+//
+//
+// }
+        if (this.health <= 0) this.kill(); // If health is less than or equal to 0, call death logic
 
     }
 
-    resetCooldown() {  // 重置冷却时间
-        var cooldown = round(random(this.cooldownMin, this.cooldownMax));  // 随机生成冷却时间
-        this.cd = cooldown;  // 设置冷却时间
+    resetCooldown() { // Reset cooldown
+        var cooldown = round(random(this.cooldownMin, this.cooldownMax)); // Randomly generate cooldown
+        this.cd = cooldown; // Set cooldown
         this.cooldown = cooldown;
     }
 
-    // Sell price  // 塔的出售价格
+// Sell price // Tower selling price
     sellPrice() {
-        return floor(this.totalCost * sellConst);  // 返回出售价格
+        return floor(this.totalCost * sellConst); // Return selling price
     }
 
-    // Target correct monster  // 锁定正确的怪物
+// Target correct monster // Target the correct monster
     target(entities) {
-        entities = this.visible(entities);  // 获取可见的怪物
-        if (entities.length === 0) return;  // 如果没有可见怪物，返回
-        var t = getTaunting(entities);  // 获取挑衅的怪物
-        if (t.length > 0) entities = t;  // 如果有挑衅的怪物，选择它们
-        var e = getFirst(entities);  // 获取第一个怪物
-        if (typeof e === 'undefined') return;  // 如果没有目标，返回
-        this.onAim(e);  // 锁定目标并攻击
+        entities = this.visible(entities); // Get visible monsters
+        if (entities.length === 0) return; // If no monsters are visible, return
+        var t = getTaunting(entities); // Get taunting monsters
+        if (t.length > 0) entities = t; // If there are taunting monsters, select them
+        var e = getFirst(entities); // Get the first monster
+        if (typeof e === 'undefined') return; // If no target, return
+        this.onAim(e); // Lock on the target and attack
     }
 
-    update() {  // 更新塔的状态
-        if (this.cd > 0) this.cd--;  // 如果冷却时间大于0，减少冷却时间
+    update() { // Update the state of the tower
+        if (this.cd > 0) this.cd--; // If the cooldown is greater than 0, reduce the cooldown
     }
 
-    // Use template to set attributes  // 使用模板设置塔的属性
+// Use template to set attributes // Use template to set tower attributes
     upgrade(template) {
-        template = typeof template === 'undefined' ? {} : template;  // 如果没有传入模板，使用空对象
-        var keys = Object.keys(template);  // 获取模板的所有键
+        template = typeof template === 'undefined' ? {} : template; // If no template is passed, use an empty object
+        var keys = Object.keys(template); // Get all keys of the template
         for (var i = 0; i < keys.length; i++) {
-            var key = keys[i];  // 遍历模板键
+            var key = keys[i]; // Iterate over the template keys
 
-            this[key] = template[key];  // 设置属性
+            this[key] = template[key]; // Set properties
         }
-        if (template.cost) this.totalCost += template.cost;  // 如果有成本，增加总成本
+        if (template.cost) this.totalCost += template.cost; // If there is a cost, increase the total cost
     }
 
-    // Returns array of visible entities out of passed array  // 返回可见实体的数组
+// Returns array of visible entities out of passed array // Returns array of visible entities
     visible(entities) {
-        return getInRange(this.pos.x, this.pos.y, this.range, entities);  // 获取在范围内的实体
+        return getInRange(this.pos.x, this.pos.y, this.range, entities); // Get entities in range
     }
 
-    // 绘制攻击范围
+// Draw the attack range
     diaplayRange(cx, cy)
     {
         stroke(255, 237, 102);
         strokeWeight(2);
         fill(this.color[0], this.color[1], this.color[2], 40);
-        //fill(100, 40);
-        // 攻击范围半径
+//fill(100, 40);
+// Attack range radius
         var r = this.range * ts * 2;
         circle(cx, cy, r);
     }
 
-    // 显示剩余cd
+//Display remaining CDs
     displayCD(cx, cy)
     {
         let cdRatio = this.cd / this.cooldown;
@@ -275,6 +273,6 @@ class Tower {  // 创建塔的类
         let enoughCash = cash > this.upgrades[0].cost;
         let icon = enoughCash ? iconUpgrade : iconUpgradeGrey;
         let scale = 0.2;
-        image(icon, cx, cy, ts * scale, ts * scale); // 移除 sin(angle) 浮动计算
+        image(icon, cx, cy, ts * scale, ts * scale); // Remove sin(angle) floating calculation
     }
 }

@@ -1,10 +1,10 @@
 /*
- * 该脚本主要负责实现
- * 游戏状态、游戏进度的UI显示和数据处理逻辑
- * 中间过场动画的显示、下一波敌人的情况显示
- */
+* This script is mainly responsible for implementing
+* Game status, game progress UI display and data processing logic
+* Display of intermediate cutscenes and the next wave of enemies
+*/
 
-let mainMenuCover; // 主菜单封面
+let mainMenuCover; // Main menu cover
 
 let imgLevelButton;
 let imgPlayButton;
@@ -22,9 +22,10 @@ let imgContinueButton;
 let imgRetryButton;
 let imgGoBackButton;
 
-let levelMapsImage = []; // 所有关卡地图
+let levelMapsImage = []; // All level maps
 
-// 文本框背景图片：波次、生命值、金钱、剩余怪物数量
+// Text box background image: waves, health, money, remaining number of monsters
+
 let bgTextWave;
 let bgTextHealth;
 let bgTextCash;
@@ -34,15 +35,15 @@ let iconMonsterAttack;
 let iconUpgrade;
 let iconUpgradeGrey;
 
-
-// 按钮：继续、暂停、重置、退出、速度倍率
+// Buttons: Continue, Pause, Reset, Exit, Speed ​​Multiplier
 let btnResume;
 let btnPause;
 let btnReset;
 let btnQuit;
 let btnSpeed;
+let btn_bearkGuide;
 
-// 敌人缩略图
+// Enemy thumbnail
 let thumbBandit;
 let thumbBatteringRam;
 let thumbPirateRaider;
@@ -50,25 +51,25 @@ let thumbMouse;
 let thumbDroneSwarm;
 let thumbAIMech;
 
-// 字体
+// Font
 let uiFont;
 let fontSize = 20;
 
-let speedIdx = 0;           // 当前速度倍率索引
-let speedSet = [1, 2, 4];   // 速度倍率选项集
+let speedIdx = 0; // Current speed multiplier index
+let speedSet = [1, 2, 4]; // Speed ​​multiplier option set
 
-var curWaveMonstersInfo = [];   // 当前波次要生成的怪物情况
-var curWaveMonstersNumber;      // 当前波次要生成怪物数量
-var showMonsterInfo = [];       // 过场动画显示的怪物信息
+var curWaveMonstersInfo = []; // The current wave of monsters to be generated
+var curWaveMonstersNumber; // The current wave of monsters to be generated
+var showMonsterInfo = []; // Monster information displayed in the cutscene
 
-// 过场动画可调参数：
-let colNum = 1;                        // 列数
-let stopTime = 1;                       // 等待时间
-let spd = 0.5;                         // 动效速度
-let offsetFactor = Math.PI / (colNum * 4);  // 偏移量
-let loopTime = 1;                       // 动画循环次数（一般为1次）
+// Adjustable parameters for cutscenes:
+let colNum = 1; // Number of columns
+let stopTime = 1; // Waiting time
+let spd = 0.5; // Animation speed
+let offsetFactor = Math.PI / (colNum * 4); // Offset
+let loopTime = 1; // Number of animation loops (usually 1 time)
 
-// 过场动画私有参数
+// Private parameters for cutscenes
 let angle;
 let colWidth;
 let isAllowTween;
@@ -77,12 +78,12 @@ let isCountingDown;
 let countdownTimeMs;
 let startTime;
 let loopCounter;
-let animationEventCallbacks = [];       // 动画结束回调
+let animationEventCallbacks = []; // Animation end callback
 
 function preloadUIAssets()
 {
-    // 读取UI背景图片
-    mainMenuCover = loadImage("images/ui/start_cover.png");
+//Read UI background image
+    mainMenuCover = loadImage("images/ui/start_cover2.png");
     imgPlayButton = loadImage("images/ui/bg_button_play.png");
     imgLeftArrowButton = loadImage("images/ui/bg_button_left_arrow.png");
     imgRightArrowButton = loadImage("images/ui/bg_button_right_arrow.png");
@@ -97,10 +98,10 @@ function preloadUIAssets()
     imgContinueButton = loadImage("images/ui/bg_button_continue.png");
     imgRetryButton = loadImage("images/ui/bg_button_retry.png");
     imgGoBackButton = loadImage("images/ui/bg_button_go_back.png");
-    
+
 
     bgTextHealth = loadImage("images/ui/bg_text_health.png");
-    bgTextWave = loadImage("images/ui/bg_text_waves.png");
+    bgTextWave= loadImage("images/ui/bg_text_waves.png");
     bgTextCash = loadImage("images/ui/bg_text_cash.png");
     bgTextMonsterRemainBar = loadImage("images/ui/bg_monster_remain_bar.png");
     bgTextMonsterRemainFill = loadImage("images/ui/bg_monster_remain_fill.png");
@@ -121,17 +122,17 @@ function preloadUIAssets()
         else if (level.id === "map3") levelMapsImage.push(loadImage("images/maps/map_level3.png"));
     });
 
-    // 加载字体
+// Load font
     uiFont = loadFont('fonts/Savory Curry.ttf');
 }
 
-// 游戏初始化时调用
+// Called when the game is initialized
 function onGameSetup()
 {
-    // 初始化ui和过场动画
+// Initialize UI and cutscenes
     uiSetup();
     animationSetup();
-    // 添加过场动画回调
+// Add cutscene callbacks
     addAnimationEventListener("NextWave", onNextWaveTransitionFinshed)
 }
 
@@ -144,8 +145,9 @@ function onGameStart()
     if (paused) btnPause.hide();
     else btnResume.hide();
     btnSpeed.show();
-    // 重置加速
-    speedIdx = -1; 
+
+// Reset acceleration
+    speedIdx = -1;
     onClickBtnSpeed();
 }
 
@@ -156,36 +158,36 @@ function onLevelFinished()
     btnResume.hide();
     btnPause.hide();
     btnSpeed.hide();
-}
 
-// 当下一波开始前调用
+}
+// Called before the next wave starts
 function onBeforeNextwave()
-{   
+{
     nextWave();
-    // 暂停游戏
+// Pause the game
     pause();
     console.log("onBeforeNextwave");
     btnPause.attribute('disabled', true);
     btnPause.addClass('disabled');
     DoAnimation();
-    // 记录怪物信息
+// Record monster information
     recordMonsterInfo();
 }
 
-// 当转场动画结束调用
+// Called when the transition animation ends
 function onNextWaveTransitionFinshed()
 {
-    // 继续游戏
+// Continue the game
     pause();
     btnPause.removeAttribute('disabled');
     btnPause.removeClass('disabled');
 }
 
-// 获取画布在屏幕的位置
+// Get the position of the canvas on the screen
 function getCanvasInfo() {
     let cnv = document.getElementById("defaultCanvas0");
     if (cnv) {
-      let rect = cnv.getBoundingClientRect();
+        let rect = cnv.getBoundingClientRect();
         return {
             left: rect.left,
             right: rect.right,
@@ -194,22 +196,24 @@ function getCanvasInfo() {
             height: rect.height
         };
     } else {
-      console.error("未找到画布元素");
+        console.error("Canvas element not found");
     }
-  }
+}
 
-// UI初始化
+// UI initialization
 function uiSetup()
 {
     initMenu();
-    // 获取画布位置
+// Get canvas position
     let canvasInfo = getCanvasInfo();
 
     console.log(canvasInfo);
     widthRatio = ts/110;
+
     heightRatio =widthRatio;
+
     pageScale = widthRatio;
-    // 重新调整图片大小
+// Resize the image
     bgTextHealth.resize(190*widthRatio, 50*heightRatio);
     bgTextCash.resize(160*widthRatio, 45*heightRatio);
     bgTextWave.resize(190*widthRatio, 50*heightRatio);
@@ -218,7 +222,7 @@ function uiSetup()
     bgTextMonsterRemainFill.resize(800*widthRatio, 40*heightRatio);
     iconMonsterAttack.resize(60*widthRatio, 60*heightRatio);
 
-    // 创建按钮
+//Create button
     var buttonHeight = canvasInfo.top + 20*heightRatio;
 
     btnQuit = createButton('');
@@ -228,7 +232,7 @@ function uiSetup()
 
     var btnSize = 50*widthRatio;
     var space = 20*widthRatio;
-    //
+//
     btnReset = createButton('');
     btnReset.position(gameWidth - btnSize - space, buttonHeight);
     btnReset.size(btnSize,btnSize);
@@ -248,23 +252,25 @@ function uiSetup()
     btnSpeed.position(btnPause.position().x - btnSize - space*5, buttonHeight + 5);
     btnSpeed.size(80*widthRatio,40*heightRatio);
     btnSpeed.class('button-speed');
-    //
-    //
-    // // 添加按钮点击事件
+
+// // Add button click event
+
     btnResume.mousePressed(onClickBtnResume);
     btnPause.mousePressed(onClickBtnPause);
     btnReset.mousePressed(onClickBtnReset);
     btnQuit.mousePressed(onClickBtnQuit);
     btnSpeed.mousePressed(onClickBtnSpeed);
 
-    // 默认情况隐藏按钮
+// Hide button by default
     onLevelFinished();
 }
 
-
 function onClickBtnResume()
 {
-    // 原侧边栏按钮的调用事件逻辑在在index.html里
+    if(showGuideScrren){
+        return;
+    }
+// The original sidebar button call event logic is in index.html
     btnResume.hide();
     btnPause.show();
     pause();
@@ -272,15 +278,20 @@ function onClickBtnResume()
 
 function onClickBtnPause()
 {
-    // 原侧边栏按钮的调用事件逻辑在在index.html里
+    if(showGuideScrren){
+        return;
+    }
+// The original sidebar button call event logic is in index.html
     btnResume.show();
     btnPause.hide();
     pause();
 }
-
 function onClickBtnReset()
 {
-    // 重玩当前关
+    if(showGuideScrren){
+        return;
+    }
+// Replay the current level
     startGame(mapData.id);
 }
 
@@ -288,32 +299,37 @@ function onClickBtnQuit()
 {
     stopGame();
     setTimeout(() => {
-        toggleLevelMenu(true); 
+        toggleLevelMenu(true);
+        showGuideScrren=false;
     }, 10);
 }
 
 function onClickBtnSpeed()
 {
-    // 原侧边栏按钮的调用事件逻辑在main.js里
+// The original sidebar button call event logic is in main.js
     speedIdx++;
     let spd = getCurrentSpeed();
     monsterSpeedMultiplier = spd;
     btnSpeed.html("x" + spd.toString());
 }
 
-function updateGameStateUI() 
+function updateGameStateUI()
+
 {
-    // 如果暂停绘制暂停画面
-    if (paused && !isAllowTween)
+
+// If the pause screen is paused && it is not the guide screen
+// if (paused && !isAllowTween)
+    if (paused && !isAllowTween&&!showGuideScrren)
     {
         fill(0, 90);
         rect(0, 0, width, height);
         fill(255);
-        textSize(50);
-        text("II PAUSE", width / 2, height / 2);
+        textSize(gameWidth/20);
+
+        text("II PAUSE", gameX+gameWidth / 2, gameY+gameHeight / 2);
     }
 
-    // 刷新游戏状态UI
+// Refresh game status UI
     var displayWave = wave > totalWaves ? totalWaves : wave;
     var waveText = 'Wave: ' + displayWave + ' / ' + totalWaves;
     var healthText = 'H: ' + health + ' / ' + maxHealth;
@@ -323,7 +339,7 @@ function updateGameStateUI()
 
     var space = 50*pageScale;
     var cashXPos = width / 2 - 160*widthRatio / 2;
-    var healthXPos = cashXPos*widthRatio - space*widthRatio  - 190*widthRatio;
+    var healthXPos = cashXPos*widthRatio - space*widthRatio - 190*widthRatio;
     var waveXPos = cashXPos*widthRatio + bgTextCash.width + space;
     var ypos = 20*heightRatio;
     var textYOffest = 34*heightRatio;
@@ -332,8 +348,8 @@ function updateGameStateUI()
     let startX = width*0.08;
 
     imageMode(CORNER);
-    // image(bgTextHealth, healthXPos, ypos,190*widthRatio,50*heightRatio);
-    // text(healthText, healthXPos + 110*widthRatio, ypos + textYOffest);
+// image(bgTextHealth, healthXPos, ypos,190*widthRatio,50*heightRatio);
+// text(healthText, healthXPos + 110*widthRatio, ypos + textYOffest);
     image(bgTextHealth, startX, ypos,190*widthRatio,50*heightRatio);
     text(healthText, startX + 110*widthRatio, ypos + textYOffest);
 
@@ -342,8 +358,8 @@ function updateGameStateUI()
     image(bgTextCash,startX2, ypos + 3*heightRatio,160*widthRatio,45*heightRatio);
     text(cashText, startX2 + 90*widthRatio, ypos + textYOffest);
 
-    // image(bgTextCash, cashXPos*widthRatio, ypos + 3*heightRatio,160*widthRatio,45*heightRatio);
-    // text(cashText, cashXPos*widthRatio + 90*widthRatio, ypos + textYOffest);
+// image(bgTextCash, cashXPos*widthRatio, ypos + 3*heightRatio,160*widthRatio,45*heightRatio);
+// text(cashText, cashXPos*widthRatio + 90*widthRatio, ypos + textYOffest);
 
     let startX3 = width*0.08+190*widthRatio +width*0.01+160*widthRatio+width*0.01;
     image(bgTextWave, startX3, ypos,190*widthRatio,50*heightRatio);
@@ -355,7 +371,7 @@ function updateGameStateUI()
 function updateMonsterStateUI()
 {
     imageMode(CORNER);
-    // 刷新剩余敌人UI
+// Refresh the remaining enemy UI
     setFont();
     var totalMonster = curWaveMonstersNumber;
     var ratio = newMonsters.length > 0 && totalMonster > 0
@@ -374,7 +390,6 @@ function updateMonsterStateUI()
     var monsterRemain = newMonsters.length;
     text("Remaining enemies: "+ monsterRemain, gameWidth/2, ypos + 28*heightRatio);
 }
-
 function setFont()
 {
     textFont(uiFont);
@@ -398,39 +413,39 @@ function drawMapGrid()
         for (let y = 0; y < grid[x].length; y++)
         {
             let value = grid[x][y];
-            
+
             stroke(255, 0, 0);
             strokeWeight(2);
             noFill();
             rect(x * ts, y * ts, ts, ts);
 
-            // 0=开始, 1=路径, 2=不可放塔, 3=可放塔, 4=终点
+// 0=start, 1=path, 2=cannot place tower, 3=tower can be placed, 4=end point
             stroke(0);
             let c;
             let msg;
             switch (value) {
                 case 0:
                     c = color(0, 255, 0);
-                    msg = "开始";
+                    msg = "start";
                     break;
                 case 1:
                     c = color(113, 219, 255);
-                    msg = "路径";
+                    msg = "path";
                     break;
                 case 2:
                     c = color(255, 0, 0);
-                    msg = "不可放塔";
+                    msg = "tower cannot be placed";
                     break;
                 case 3:
                     c = color(255, 255, 73);
-                    msg = "可放塔";
+                    msg = "tower can be placed";
                     break;
                 case 4:
                     c = color(255, 165, 0);
-                    msg = "终点";
+                    msg = "end point";
                     break;
                 default:
-                    col = color(200); // 默认灰色
+                    col = color(200); // default gray
             }
             fill(c);
             textFont("Arial");
@@ -442,15 +457,15 @@ function drawMapGrid()
 }
 
 
-function DoAnimation() 
+function DoAnimation()
 {
     loopCounter = 0;
     isAllowTween = true;
 }
 
-function addAnimationEventListener(eventId, callback) 
+function addAnimationEventListener(eventId, callback)
 {
-    if (!animationEventCallbacks[eventId]) 
+    if (!animationEventCallbacks[eventId])
     {
         animationEventCallbacks[eventId] = [];
     }
@@ -464,17 +479,17 @@ function removeAnimationEventListener(eventId)
         delete animationEventCallbacks[eventId];
     }
 }
-  
-function triggerAnimationEvent() 
+
+function triggerAnimationEvent()
 {
-    // 遍历并触发所有事件的回调
-    for (let event in animationEventCallbacks) 
+// Traverse and trigger callbacks for all events
+    for (let event in animationEventCallbacks)
     {
         animationEventCallbacks[event].forEach(callback => callback());
     }
 }
 
-function animationSetup() 
+function animationSetup()
 {
     angle = 0;
     colWidth = gameWidth / colNum;
@@ -488,11 +503,10 @@ function animationSetup()
 
 function animationDraw()
 {
-    if (!isAllowTween) return;
-    //background(255);
+    if (!isAllowTween) return; //background(255);
 
-    // 如果正在倒数中，则不刷新动画
-    if (isCountingDown) 
+// If the countdown is in progress, the animation will not be refreshed
+    if(isCountingDown)
     {
         let elapsedTime = millis() - startTime;
         let remainingTime = countdownTimeMs - elapsedTime;
@@ -506,13 +520,13 @@ function animationDraw()
         }
         onCountingDown(remainingTime / 1000);
         return;
-    } 
-    else 
+    }
+    else
     {
         let minimum = isFadeIn ? -colNum * offsetFactor : 0;
         let dir = isFadeIn ? -1.0 : 1.0;
 
-        for (let i = 0; i < colNum; i++) 
+        for (let i = 0; i < colNum; i++)
         {
             let toAngle = angle + i * offsetFactor * dir;
             toAngle = constrain(toAngle, minimum, Math.PI / 2);
@@ -522,26 +536,26 @@ function animationDraw()
             fill(0);
             rect(xpos, ypos, colWidth, colHeight);
 
-            // 判断最后一个柱子是否完成，是的话开始计时
-            if (i === colNum - 1) 
+// Check if the last column is completed, if so, start timing
+            if (i === colNum - 1)
             {
-                if (isFadeIn && height - colHeight < 0.01 || !isFadeIn && colHeight - 0.01 < 0) 
+                if (isFadeIn && height - colHeight < 0.01 || !isFadeIn && colHeight - 0.01 < 0)
                 {
-                    // 切换状态
+// Switch state
                     isFadeIn = !isFadeIn;
                     angle = isFadeIn ? 0 : Math.PI / 2;
 
-                    // 检查超过播放次数
+// Check if the number of playbacks has exceeded
                     loopCounter++;
-                    if (loopCounter >= loopTime * 2) 
+                    if (loopCounter >= loopTime * 2)
                     {
                         isAllowTween = false;
-                        triggerAnimationEvent();    // 触发回调
+                        triggerAnimationEvent(); // trigger callback
                     }
-                    // 没有的话计时
-                    else 
+// if not, count down
+                    else
                     {
-                        startTime = millis();  // 记录倒计时开始的时间
+                        startTime = millis(); // record the time when the countdown starts
                         isCountingDown = true;
                     }
                 }
@@ -551,19 +565,18 @@ function animationDraw()
         angle -= spd * dir;
     }
 }
-
 function onCountingDown(remainingTime)
 {
-    
+
     fill(255);
-    
-    // 显示倒计时
+
+// Display countdown
     var msg = "Next wave will arrive in " + remainingTime.toFixed(0) + "s";
     textSize(36);
     textAlign(LEFT, BASELINE);
     text(msg, gameWidth / 2 - 275, height / 2 - 50);
 
-    // 显示敌人信息
+//Display enemy information
     if (showMonsterInfo.length <= 0) return;
 
     var monsterNumber = showMonsterInfo.length / 2;
@@ -571,7 +584,7 @@ function onCountingDown(remainingTime)
     var space = 20;
     var ypos = 400;
     var startXpos = gameWidth / 2 - monsterNumber / 2 * size - space;
-    
+
     for (var i = 0; i < monsterNumber; i++)
     {
         var name = showMonsterInfo[i*2];
@@ -598,7 +611,7 @@ function onCountingDown(remainingTime)
 function calculateMonsterTotalNumber()
 {
     var tmpTotal = 0;
-    for (var i = 0; i < curWaveMonstersInfo.length; i++) 
+    for (var i = 0; i < curWaveMonstersInfo.length; i++)
     {
         var subArray = curWaveMonstersInfo[i];
         var count = subArray[subArray.length - 1];
@@ -613,9 +626,9 @@ function calculateMonsterTotalNumber()
 
 function recordMonsterInfo()
 {
-    //curWaveMonstersInfo： ['aaa', 12], ['bbb', 43],['ccc', 58]
+//curWaveMonstersInfo: ['aaa', 12], ['bbb', 43], ['ccc', 58]
     showMonsterInfo = [];
-    for (var i = 0; i < curWaveMonstersInfo.length; i++) 
+    for (var i = 0; i < curWaveMonstersInfo.length; i++)
     {
         var subArray = curWaveMonstersInfo[i];
         var count = subArray[subArray.length - 1];
@@ -648,29 +661,27 @@ function getRatingImage()
     else return imgResultStar0;
 }
 
-
 let hbAngle = 0;
-// 心跳画面效果
+// Heartbeat screen effect
 function drawHeartbeatEffect()
 {
     if (paused) return;
-    let threshold = maxHealth / 2;  // 生命值到一半后开始效果
+    let threshold = maxHealth / 2; // Effect starts after half of health value
     if (health > threshold) return;
     let amt = health / threshold;
-    
-    
-    let speed = lerp(0.1, 0.08, amt);     // 速度
-    let r = lerp(130, 255, amt);        // 颜色
+
+    let speed = lerp(0.1, 0.08, amt); // Speed
+    let r = lerp(130, 255, amt); // Color
     let alphaIntensity = lerp(50, 0, amt);
     let alpha = sin(hbAngle) * alphaIntensity;
     let c = color(r, 0, 0, alpha);
     noStroke();
     fill(c)
     rect(0, 0, gameWidth, height);
-    
+
     hbAngle += speed;
 }
-let redFlashAlpha = 0;  // 屏幕红光透明度控制
+let redFlashAlpha = 0; // Screen red light transparency control
 function drawShakeEffect() {
     if (prevHealth != health) {
         shakeAmount = 10;
@@ -689,11 +700,11 @@ function drawShakeEffect() {
 function drawRedFlashOverlay() {
     if (redFlashAlpha > 0) {
         push();
-        resetMatrix();  // 重置所有 translate / scale 等，画到原始屏幕坐标
+        resetMatrix(); // Reset all translate/scale, etc., and draw to the original screen coordinates
         noStroke();
         fill(255, 0, 0, redFlashAlpha);
         rect(0, 0, width, height);
-        redFlashAlpha -= 10;  // 渐隐
+        redFlashAlpha -= 10; // Fade
         pop();
     }
 }

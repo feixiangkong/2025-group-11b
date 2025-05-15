@@ -1,12 +1,12 @@
-// 声明全局变量
+//Declare global variables
 let BanditImg;
 let dragonImg;
 let myTowerImg
 
-let bgImg;  // 声明背景图变量
+let bgImg; //Declare background image variables
 
-let moneyImg;//钱图像
-let moneyBarImg;//钱图像
+let moneyImg;//Money image
+let moneyBarImg;//Money image
 let healthBarImg;
 let monsterBarImg;
 
@@ -31,8 +31,9 @@ let m5Images = [];
 
 let m6Image;
 let m6Images = [];
-let t1Image;//箭
-let fireBallImage;//火球
+
+let t1Image; //arrow
+let fireBallImage; //fireball
 
 
 let t1_2Image;
@@ -74,18 +75,25 @@ let bgmLevel2;
 let bgmLevel3;
 
 
+let guideFingerImg;
+let  keyboardImg;
+
+
+
+
+
 let widthRatio = 0;
 let heightRatio = 0;
 let pageScale = 0;
 
-let pg; // 定义图层
+let pg; // Define the layer
 
 //英雄行动
 let walkSprites = {};
 
 let hero;
 function preload() {
-    // 加载塔图片（确保图片路径正确）
+
 
     loadImages();
     loadSounds();
@@ -95,6 +103,8 @@ function preload() {
 }
 
 function loadImages() {
+    guideFingerImg =  loadImage("images/ui/finger.png");
+    keyboardImg =  loadImage("images/ui/keyboard.png");
     t3_1Image = loadImage("images/t3_1.png");
     t3_2Image = loadImage("images/t3_2.png");
     t3_3Image = loadImage("images/t3_3.png");
@@ -192,7 +202,7 @@ function loadImages() {
 function setup() {
     let div = document.getElementById("game-area");
     let rect = div.getBoundingClientRect();
-    console.log(`宽度: ${rect.width}, 高度: ${rect.height}`);
+    console.log(`width: ${rect.width}, height: ${rect.height}`);
 
     cols = 12;
     rows = 8;
@@ -201,24 +211,28 @@ function setup() {
     console.log("[setup] windowWidth:", windowWidth, "windowHeight:", windowHeight);
     console.log("[setup] cols:", cols, "rows:", rows);
     gameWidth = windowWidth/5*4;
-    ts = min(gameWidth / cols,windowHeight/rows); // 取最小值，确保是正方形
+    ts = min(gameWidth / cols,windowHeight/rows); // Take the minimum value to ensure it is a square
+
+
     gameWidth =ts*cols;
-    gameX = 0; // 补上这一
+    gameX = 0;
     console.log("[setup] ts:", ts);
     console.log("[setup] gameWidth:", gameWidth);
-    //宽比高小
+    //The width is smaller than the height
     let mapRatio = gameWidth / cols;
     let screenRatio = windowHeight / rows;
     
     if (mapRatio < screenRatio) {
         gameX = 0;
-        gameY = (windowHeight - rows * mapRatio) / 2;
+        gameY = 0;
     } else {
         gameX = (windowWidth / 5 * 4 - cols * screenRatio) / 2;
         gameY = 0;
     }
+
+
     console.log("[setup] gameX:", gameX, "gameY:", gameY);
-    // alert(ts);
+
 
 
     // console.log(ts);
@@ -229,7 +243,7 @@ function setup() {
 
     background(255);
     cnvs.parent('main-holder');
-    // 通过 position() 方法将 canvas 居中
+    // Center the canvas using the position() method
 
     // Add a class attribute to the canvas.
     cnvs.class('pinkborder');
@@ -252,6 +266,7 @@ function setup() {
     monsterBarImg.resize(monsterBarImg.width * 0.6, monsterBarImg.height * 0.6)
 
     playStartBGM();
+    //游戏初始化
     onGameSetup();
     loadMoster();
 
@@ -266,13 +281,13 @@ function setup() {
      arrowButtonWidth = towerWidth/12;
      pageHeight = 2 * (pageWidth/ 2 + towerWidth/20);
 
-    // 创建两组页面
+    // Create two groups of pages
     let page1 = new Page(towerX+pageX,towerTipPaneHeight+towerWidth/24 , pageWidth, pageHeight);
     let page2 = new Page(towerX+pageX, towerTipPaneHeight+towerWidth/24, pageWidth, pageHeight);
 
 
 
-    // 给每个页面添加按钮
+    // Add buttons to each page
     let labels = ['Archer Tower', 'Boiling Oil Tower', 'Cannon Tower', 'Net Thrower Tower', ];
     for (let i = 0; i < 4; i++) {
         let row = Math.floor(i / 2);
@@ -287,7 +302,7 @@ function setup() {
         page2.addButton(row, col, labels2[i]);
     }
 
-    // 将页面添加到页面数组
+    // Add the page to the page array
     pages.push(page1, page2);
 
     // 向左和向右的箭头按钮
@@ -295,7 +310,7 @@ function setup() {
     rightArrowBtn = new Button(width - towerWidth/12-towerWidth/24, pageHeight/2+towerWidth/6/2+towerWidth/15, towerWidth/12, towerWidth/6, null, ">");
     towerInfoPane = new SlidePane(towerX,pageHeight+towerTipPaneHeight+pageWidth/12,towerWidth,towerHeight/2, towerHeight/2);
 
-    pg = createGraphics(gameWidth, gameHeight); // 创建一个新的图层
+    pg = createGraphics(gameWidth, gameHeight); // Create a new layer
     
 
 }

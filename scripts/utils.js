@@ -1,18 +1,18 @@
-new p5();   // p5.js global mode
+new p5(); // p5.js global mode
 
-// 检查是否大致在格子的中心
+// Check if it is roughly in the center of the grid
 function atTileCenter(x, y, col, row) {
     var c = center(col, row);
     var t = ts / 24;
     return between(x, c.x - t, c.x + t) && between(y, c.y - t, c.y + t);
 }
 
-// 检查数字是否在范围内（不包含边界）
+// Check if the number is in the range (excluding the boundaries)
 function between(num, min, max) {
     return num >= Math.min(min, max) && num <= Math.max(min, max);
 }
 
-// 构建一个二维数组，填充指定值
+// Build a two-dimensional array and fill it with the specified value
 function buildArray(cols, rows, val) {
     var arr = [];
     for (var x = 0; x < cols; x++) {
@@ -24,12 +24,12 @@ function buildArray(cols, rows, val) {
     return arr;
 }
 
-// 返回格子中心的位置
+// Return the position of the center of the grid
 function center(col, row) {
     return createVector(col*ts + ts/2, row*ts + ts/2);
 }
 
-// 复制二维数组
+// Copy a two-dimensional array
 function copyArray(arr) {
     var newArr = [];
     for (var x = 0; x < arr.length; x++) {
@@ -41,12 +41,12 @@ function copyArray(arr) {
     return newArr;
 }
 
-// 将网格坐标转换为字符串
+// Convert grid coordinates to strings
 function cts(col, row) {
     return col + ',' + row;
 }
 
-// 返回具有特定名称的实体数组
+// Return an array of entities with a specific name
 function getByName(entities, names) {
     var results = [];
     if (typeof names === 'string') names = [names];
@@ -59,8 +59,8 @@ function getByName(entities, names) {
     return results;
 }
 
-// 获取第一个怪物（即离出口最近的怪物）
-// TODO 确定更准确的选择系统，避免被循环迷惑
+// Get the first monster (the one closest to the exit)
+// TODO Fix more accurate selection system to avoid being confused by loops
 function getFirst(entities) {
     var leastDist = 10000;
     var chosen = entities[0];
@@ -76,8 +76,8 @@ function getFirst(entities) {
     return chosen;
 }
 
-// 获取范围内的实体（半径以格子为单位）
-// TODO 设置最小和最大范围
+// Get entities in range (radius in grid units)
+// TODO set minimum and maximum range
 function getInRange(cx, cy, radius, entities) {
     var results = [];
     for (var i = 0; i < entities.length; i++) {
@@ -91,7 +91,7 @@ function getInRange(cx, cy, radius, entities) {
     return results;
 }
 
-// 获取离实体最近的实体
+// Get the entity closest to the entity
 function getNearest(entities, pos, ignore) {
     var lowestDist = 10000;
     var chosen = entities[0];
@@ -107,7 +107,7 @@ function getNearest(entities, pos, ignore) {
     return chosen;
 }
 
-// 获取血量最多的怪物
+// Get the monster with the most health
 function getStrongest(entities) {
     var mostHealth = 0;
     var chosen = entities[0];
@@ -121,7 +121,7 @@ function getStrongest(entities) {
     return chosen;
 }
 
-// 获取所有嘲讽的怪物
+// Get all taunted monsters
 function getTaunting(entities) {
     var results = [];
     for (var i = 0; i < entities.length; i++) {
@@ -131,44 +131,41 @@ function getTaunting(entities) {
     return results;
 }
 
-//检测两个居中矩形的碰撞，重叠
+//Detect collision and overlap between two centered rectangles
 function checkRectCollision(rect1, rect2) {
-    // rect1和rect2都是包含x,y,width,height属性的对象
-    // x,y表示中心点坐标
+// rect1 and rect2 are both objects containing x, y, width, height properties
+// x, y represent the center point coordinates
 
-    // 计算两个矩形在x轴和y轴上的半宽高
+// Calculate the half width and height of the two rectangles on the x-axis and y-axis
     let rect1HalfWidth = rect1.width / 2;
     let rect1HalfHeight = rect1.height / 2;
     let rect2HalfWidth = rect2.width / 2;
     let rect2HalfHeight = rect2.height / 2;
 
-    // 检查x轴和y轴上是否有重叠
+// Check if there is overlap on the x-axis and y-axis
     let xCollision = abs(rect1.x - rect2.x) < (rect1HalfWidth + rect2HalfWidth);
     let yCollision = abs(rect1.y - rect2.y) < (rect1HalfHeight + rect2HalfHeight);
 
-    // 只有当x轴和y轴都有重叠时才发生碰撞
+// Collision only occurs when both the x-axis and y-axis overlap
     return xCollision && yCollision;
 }
 
-// 返回网格坐标
+// Return grid coordinates
 function gridPos(x, y) {
     return createVector(floor((x) / ts), floor((y) / ts));
 }
-
 function gridPosByLastest(x, y) {
 
     return createVector(floor((x-gameX) / ts), floor((y-gameY) / ts));
 
-
-
 }
 
-// 检查点是否在圆内
+// Check if the point is inside the circle
 function insideCircle(x, y, cx, cy, r) {
     return sq(x - cx) + sq(y - cy) < sq(r);
 }
 
-// 检查鼠标是否在地图内
+// Check if the mouse is inside the map
 function mouseInMap() {
     const inX = between(mouseX, gameX, gameX + gameWidth);
     const inY = between(mouseY, gameY, gameY + gameHeight);
@@ -176,7 +173,7 @@ function mouseInMap() {
 
     return inside;
 }
-// 返回某个值的正交邻居
+// Return the orthogonal neighbors of a value
 function neighbors(grid, col, row, val) {
     var neighbors = [];
     if (col !== 0 && grid[col - 1][row] === val) {
@@ -194,12 +191,12 @@ function neighbors(grid, col, row, val) {
     return neighbors;
 }
 
-// 检查点是否在矩形外
+// Check if the point is outside the rectangle
 function outsideRect(x, y, cx, cy, w, h) {
     return x < cx || y < cy || x > cx + w || y > cy + h;
 }
 
-// 绘制多边形
+// Draw a polygon
 function polygon(x, y, radius, npoints) {
     var angle = TWO_PI / npoints;
     beginShape();
@@ -211,12 +208,12 @@ function polygon(x, y, radius, npoints) {
     endShape(CLOSE);
 }
 
-// 返回一个随机整数，参数与 p5.js 的 random() 相同
+// Return a random integer, the parameters are the same as random() in p5.js
 function randint() {
     return floor(random(...arguments));
 }
 
-// 显示数字范围
+// Display the range of numbers
 function rangeText(min, max) {
     if (min === max) {
         return String(min);
@@ -225,31 +222,31 @@ function rangeText(min, max) {
     }
 }
 
-// 移除空的临时生成点
+// Remove empty temporary spawn points
 function removeTempSpawns() {
     for (var i = tempSpawns.length - 1; i >= 0; i--) {
         if (tempSpawns[i][1] === 0) tempSpawns.splice(i, 1);
     }
 }
 
-// 将字符串转换为向量
+// Convert string to vector
 function stv(str) {
     var arr = str.split(',');
     return createVector(parseInt(arr[0]), parseInt(arr[1]));
 }
 
-// 将向量转换为字符串
+// Convert vector to string
 function vts(v) {
     return v.x + ',' + v.y;
 }
 
 /**
- * 寻找从格子值 0（开始）到格子值 4（终点）的整条路径。
- * @param {number[][]} grid - 上面 maps.customMap.grid 形式的二维数组
- * @returns {Array<{col:number, row:number}>} 路径坐标列表
+ * Find the entire path from grid value 0 (start) to grid value 4 (end).
+ * @param {number[][]} grid - 2D array in the form of maps.customMap.grid above
+ * @returns {Array<{col:number, row:number}>} path coordinate list
  */
 function findPathBFS(grid) {
-    // 1. 找到起点(0) 和 终点(4)
+// 1. Find the starting point (0) and the end point (4)
     let startPos = null;
     let endPos = null;
     for (let c = 0; c < grid.length; c++) {
@@ -262,29 +259,29 @@ function findPathBFS(grid) {
         }
     }
     if (!startPos || !endPos) {
-        console.log('未找到起点或终点');
+        console.log('Start or end point not found');
         return [];
     }
 
-    // 2. BFS 所需队列、标记
+// 2. Queues and markers required for BFS
     let queue = [];
     let visited = new Set();
     let cameFrom = new Map();
-    let distance = {}; // 用来存储每个格子到终点的距离
+    let distance = {}; // Used to store the distance from each grid to the end point
 
-    // 起点入队
+// Start point joins the queue
     queue.push(startPos);
     visited.add(posKey(startPos.col, startPos.row));
-    distance[posKey(startPos.col, startPos.row)] = 0;  // 起点的距离是 0
+    distance[posKey(startPos.col, startPos.row)] = 0; // The distance from the start point is 0
 
-    // 3. BFS 主循环
+// 3. BFS main loop
     while (queue.length > 0) {
         let current = queue.shift();
         if (current.col === endPos.col && current.row === endPos.row) {
-            // 找到终点 => 回溯得到路径
+// Found the end point => backtrack to get the path
             return backtrackPath(cameFrom, startPos, endPos);
         }
-        // 获取可通行的邻居(值为 1 或 4)
+// Get the traversable neighbors (value is 1 or 4)
         let nb = getWalkableNeighbors(grid, current.col, current.row);
         for (let nxt of nb) {
             let k = posKey(nxt.col, nxt.row);
@@ -292,39 +289,38 @@ function findPathBFS(grid) {
                 visited.add(k);
                 cameFrom.set(k, current);
                 queue.push(nxt);
-                // 更新当前邻居的距离
+// Update the distance of the current neighbor
                 distance[k] = distance[posKey(current.col, current.row)] + 1;
             }
         }
     }
 
-    // 没搜到终点，返回空
+// No end point found, return empty
     return [];
 }
-
-/** 返回当前位置上下左右、值为1(路径)或4(终点)的邻居 */
+/** Returns the neighbors above, below, left, and right of the current position, with values ​​of 1 (path) or 4 (end point) */
 function getWalkableNeighbors(grid, c, r) {
     let results = [];
-    // 上
+// Up
     if (r > 0 && (grid[c][r-1] === 1 || grid[c][r-1] === 4)) {
         results.push({col:c, row:r-1});
     }
-    // 下
+// Down
     if (r < grid[c].length-1 && (grid[c][r+1] === 1 || grid[c][r+1] === 4)) {
         results.push({col:c, row:r+1});
     }
-    // 左
+// Left
     if (c > 0 && (grid[c-1][r] === 1 || grid[c-1][r] === 4)) {
         results.push({col:c-1, row:r});
     }
-    // 右
+//right
     if (c < grid.length-1 && (grid[c+1][r] === 1 || grid[c+1][r] === 4)) {
         results.push({col:c+1, row:r});
     }
     return results;
 }
 
-/** 回溯 cameFrom，构造完整路径 */
+/** Trace back cameFrom and construct the complete path */
 function backtrackPath(cameFrom, startPos, endPos) {
     let path = [];
     let current = endPos;
@@ -344,19 +340,19 @@ function posKey(c, r) {
     return c + ',' + r;
 }
 
-// 判断点是否在扇形内
+// Determine whether the point is within the sector
 function isPointInSector(x, y, centerX, centerY, radius, startAngle, endAngle) {
     let dx = x - centerX;
     let dy = y - centerY;
     let distance = sqrt(dx * dx + dy * dy);
-    
+
     if (distance > radius) return false;
-    
+
     let angle = atan2(dy, dx);
     if (angle < 0) angle += TWO_PI;
     if (startAngle > endAngle) {
-      return (angle >= startAngle || angle <= endAngle);
+        return (angle >= startAngle || angle <= endAngle);
     } else {
-      return (angle >= startAngle && angle <= endAngle);
+        return (angle >= startAngle && angle <= endAngle);
     }
 }

@@ -1,5 +1,5 @@
-class Hero {  // 创建塔的类
-    constructor(x, y) {  // 构造函数，初始化塔的位置和属性
+class Hero {
+    constructor(x, y) {  // Constructor to initialize the hero's position and attributes
         this.img = undefined;
         this.x = x;
         this.y = y;
@@ -7,7 +7,7 @@ class Hero {  // 创建塔的类
         this.speed = 3;
         this.range = 2;
 
-        this.direction = 'down'; // 默认面朝下方
+        this.direction = 'down'; // Default facing downwards
         this.isMoving = false;
         this.animationFrame = 0;
         this.animationSpeed = 0.2;
@@ -17,63 +17,52 @@ class Hero {  // 创建塔的类
         this.moveDown = false;
         this.cd = 0;
 
-
-        this.baseOnTop = true;      // 是否在炮管上方绘制塔基
-        this.color = [0, 0, 0];     // 主色
-        this.drawLine = true;       // 是否绘制攻击目标的连线
-        this.follow = true;         // 是否跟随目标，即使不攻击
-        this.hasBarrel = true;      // 是否有炮管
-        this.hasBase = true;        // 是否有塔基
-        this.length = 0.7;          // 炮管长度（以瓦片为单位）
-        this.radius = 1;            // 塔基半径（以瓦片为单位）
-        this.secondary = [0, 0, 0]; // 辅助色
-        this.weight = 2;            // 激光描边宽度
-        this.width = 0.3;           // 炮管宽度（以瓦片为单位）
+        this.color = [0, 0, 0];     // Primary color
+        this.follow = true;         // Whether to follow the target even when not attacking
+        this.length = 0.7;          // Barrel length (in tile units)
+        this.radius = 1;            // Base radius (in tile units)
+        this.secondary = [0, 0, 0]; // Secondary color
+        this.weight = 2;            // Laser stroke width
+        this.width = 0.3;           // Barrel width (in tile units)
         this.health = 10;
 
-        // Misc  // 杂项
-        this.alive = true;          // 塔是否存活
-        this.name = 'tower';        // 塔的名称
-        this.sound = null;          // 发射时播放的声音
-        this.title = 'Tower';       // 塔的标题
-        this.selected = false;      // 是否被选中
+        // Miscellaneous
+        this.alive = true;          // Whether the hero is alive
+        this.name = 'tower';        // Hero's name
+        this.sound = null;          // Sound to play when attacking
+        this.title = 'Tower';       // Hero's title
+        this.selected = false;      // Whether the hero is selected
 
-        // Position  // 塔的位置
-        this.angle = 0;             // 塔的角度
+        // Position
+        this.angle = 0;             // Hero's angle
+        this.pos = createVector(x, y);  // Screen position
 
-        this.pos = createVector(x, y);  // 屏幕位置
+        // Stats
+        this.cooldown = 0.01;       // Cooldown time
+        this.cooldownMax = 72;      // Maximum cooldown time
+        this.cooldownMin = 48;      // Minimum cooldown time
+        this.cost = 0;              // Purchase cost of the hero
+        this.damageMax = 20;        // Maximum damage
+        this.damageMin = 1;         // Minimum damage
+        this.totalCost = 0;         // Total cost
+        this.type = 'physical';     // Damage type
+        this.upgrades = [];         // List of available upgrades
 
-        // Stats  // 塔的属性
-        this.cooldown = 0.01;       // 冷却时间
-
-
-        this.cooldownMax = 72;       // 最大冷却时间
-        this.cooldownMin = 48;       // 最小冷却时间
-        this.cost = 0;              // 塔的购买成本
-        this.damageMax = 20;        // 最大伤害
-        this.damageMin = 1;         // 最小伤害
-
-        this.totalCost = 0;         // 总成本
-        this.type = 'physical';     // 伤害类型
-        this.upgrades = [];         // 升级列表
-
-
-        this.powerCd = 0;
-        this.powerCoolDown = 0;
-        this.tower = undefined;//英雄复制的塔
-        this.copyTower = undefined; //拷贝能力的塔
-        this.powerTowerPostionRect = undefined;//获取塔能力，塔相关的位置方块，防止重复获取
-        this.createPower = false;
-
+        this.powerCd = 0;           // Power cooldown
+        this.powerCoolDown = 0;     // Maximum power cooldown
+        this.tower = undefined;     // Tower copied by the hero
+        this.copyTower = undefined; // Tower whose abilities are being copied
+        this.powerTowerPostionRect = undefined; // Position rectangle of the tower for power acquisition, prevents repeated acquisition
+        this.createPower = false;   // Whether to create the power
     }
 
 
     // 更新位置
     updateStateAndPositon() {
-        // 重置移动状态
+        // reset move state
         this.isMoving = false;
 
-        // 处理移动
+        // update move
         if (this.moveLeft) {
             this.x -= this.speed;
             this.direction = 'left';
@@ -102,67 +91,55 @@ class Hero {  // 创建塔的类
                 this.animationFrame = 0;
             }
         } else {
-            // 静止时显示第一帧
+
             this.animationFrame = 0;
         }
 
-        // 边界检查
+        //  Check boundaries.
         this.x = constrain(this.x, this.size / 2, gameWidth - this.size / 2);
         this.y = constrain(this.y, this.size / 2, gameHeight - this.size / 2);
-        this.pos = createVector(this.x, this.y);  // 屏幕位置
+        this.pos = createVector(this.x, this.y);
     }
 
 
     setMove(keyCode, isMoving) {
         switch (keyCode) {
-            case 37: // 左箭头
+            case 37: // left arrow
                 hero.moveLeft = isMoving;
                 break;
-            case 39: // 右箭头
+            case 39: // right arrow
                 hero.moveRight = isMoving;
                 break;
-            case 38: // 上箭头
+            case 38: // up arrow
                 hero.moveUp = isMoving;
                 break;
-            case 40: // 下箭头
+            case 40: // down arrow
                 hero.moveDown = isMoving;
                 break;
         }
     }
 
 
-    draw() {  // 绘制塔
+    draw() {
         this.updateStateAndPositon();
 
-        //如果鼠标在角色格子内 显示范围
+        //check inRange
         if (mouseX >= this.x - this.size / 2 + gameX && mouseX <= this.x + this.size / 2 + gameX && mouseY >= this.y - this.size / 2 + gameY && mouseY <= this.y + this.size / 2 + gameY) {
             this.diaplayRange(this.x, this.y);
         }
 
 
-        // stroke(255, 237, 102);
-        // strokeWeight(2);
-        // fill(0, 10);
-        // //fill(100, 40);
-        // // 攻击范围半径
-        // var r = this.range * ts * 2;
-        // circle(0, 0, r);
         push();
         translate(this.x, this.y);
         let spriteArray = walkSprites['walk'];
         let frameIndex = floor(this.animationFrame) % spriteArray.length;
 
-        // 根据方向决定是否翻转
+        // Flip the sprite based on direction
         if (this.direction == 'left') {
             scale(-1, 1);
-            // translate(-this.size*2, 0);
+
         }
 
-        // stroke('red');
-        // strokeWeight(3);
-        // rectMode(CENTER);
-        // rect(0, 0, this.size, this.size);
-        // 绘制精灵，居中显示
 
         imageMode(CENTER);
         image(spriteArray[frameIndex], 0, 0, this.size, this.size, 400, 0, 1000, 1000);
@@ -183,15 +160,15 @@ class Hero {  // 创建塔的类
 
 
     canFire() {
-        return this.cd <= 0;  // 如果冷却时间为0，表示可以攻击
+        return this.cd <= 0; // If the cooldown is 0, it means the tower can attack
     }
 
     canGetPower() {
-        return this.powerCd === 0;  // 如果冷却时间为0，表示可以获取塔能力
+        return this.powerCd === 0;  // If the cooldown is 0, it means the hero can absorb tower abilities
     }
 
     visible(entities) {
-        return getInRange(this.pos.x, this.pos.y, this.range, entities);  // 获取在范围内的实体
+        return getInRange(this.pos.x, this.pos.y, this.range, entities);  // Get entities within range
     }
 
     //使用塔的能力
@@ -214,25 +191,25 @@ class Hero {  // 创建塔的类
 
     getPowerByTowers(towers) {
         this.handlePowerCreation();
-        
+
         let cancleCreate = true;
-        
+
         for (var i = 0; i < towers.length; i++) {
             var t = towers[i];
             if (this.checkTowerCollision(t)) {
                 cancleCreate = false;
                 this.displayPoweCD(this.pos.x, this.pos.y);   // 绘制cd
                 this.updatePowerCD();
-                
+
                 this.handlePowerAcquisition(t);
             }
         }
-    
+
         if (cancleCreate) {
             this.resetPowerState();
         }
     }
-    
+
     // Helper methods
     handlePowerCreation() {
         if (this.powerCd <= 0 && this.createPower) {
@@ -242,25 +219,19 @@ class Hero {  // 创建塔的类
             this.createPower = false;
         }
     }
-    
+
     checkTowerCollision(tower) {
         let rect1 = {
-            x: this.x,
-            y: this.y,
-            width: ts,
-            height: ts,
+            x: this.x, y: this.y, width: ts, height: ts,
         };
-    
+
         let rect2 = {
-            x: tower.pos.x,
-            y: tower.pos.y,
-            width: ts,
-            height: ts,
+            x: tower.pos.x, y: tower.pos.y, width: ts, height: ts,
         };
-        
+
         return checkRectCollision(rect1, rect2);
     }
-    
+
     handlePowerAcquisition(tower) {
         if (this.powerTowerPostionRect === undefined) {
             this.initializePower(tower);
@@ -268,53 +239,44 @@ class Hero {  // 创建塔的类
             this.updateExistingPower(tower);
         }
     }
-    
+
     initializePower(tower) {
         this.powerTowerPostionRect = {
-            x: tower.pos.x,
-            y: tower.pos.y,
-            width: ts,
-            height: ts,
+            x: tower.pos.x, y: tower.pos.y, width: ts, height: ts,
         };
-    
+
         this.resetPowerCoolDown();
         this.createPower = true;
         this.copyTower = tower;
         this.tower = undefined;
     }
-    
+
     updateExistingPower(tower) {
         let heroRect = {
-            x: this.x,
-            y: this.y,
-            width: ts,
-            height: ts,
+            x: this.x, y: this.y, width: ts, height: ts,
         };
-    
-        // 已经有能力，禁止重复获取相同的塔
+
+        // Already have the ability, prevent acquiring the same tower again
         if (!checkRectCollision(heroRect, this.powerTowerPostionRect) && this.createPower == false) {
             this.reinitializePower(tower);
         }
-    
-        // 已经有能力，相同位置的塔升级了 可以重新获取
+
+        // If the tower at the same position has been upgraded, allow re-acquisition
         if (checkRectCollision(heroRect, this.powerTowerPostionRect)) {
             this.handleUpgradedTower(tower);
         }
     }
-    
+
     reinitializePower(tower) {
         this.powerTowerPostionRect = {
-            x: tower.pos.x,
-            y: tower.pos.y,
-            width: ts,
-            height: ts,
+            x: tower.pos.x, y: tower.pos.y, width: ts, height: ts,
         };
-    
+
         this.resetPowerCoolDown();
         this.createPower = true;
         this.copyTower = tower;
     }
-    
+
     handleUpgradedTower(tower) {
         if (this.createPower == false && this.tower.name != tower.name) {
             this.resetPowerCoolDown();
@@ -322,7 +284,7 @@ class Hero {  // 创建塔的类
             this.copyTower = tower;
         }
     }
-    
+
     resetPowerState() {
         this.createPower = false;
         this.powerCd = 0;
@@ -331,15 +293,15 @@ class Hero {  // 创建塔的类
 
     target(entities) {
 
-        entities = this.visible(entities);  // 获取可见的怪物
+        entities = this.visible(entities);  // Get visible monsters
 
-        if (entities.length === 0) return;  // 如果没有可见怪物，返回
-        var t = getTaunting(entities);  // 获取挑衅的怪物
-        if (t.length > 0) entities = t;  // 如果有挑衅的怪物，选择它们
-        var e = getFirst(entities);  // 获取第一个怪物
-        if (typeof e === 'undefined') return;  // 如果没有目标，返回
+        if (entities.length === 0) return;  // Return if no visible monsters
+        var t = getTaunting(entities);  // Get taunting monsters
+        if (t.length > 0) entities = t;  // If there are taunting monsters, select them
+        var e = getFirst(entities);  // Get the first monster
+        if (typeof e === 'undefined') return;  // Return if no target found
 
-        this.onAim(e);  // 锁定目标并攻击
+        this.onAim(e);  // Lock on target and attack
 
     }
 
@@ -355,14 +317,11 @@ class Hero {  // 创建塔的类
         let b = new Arrow(this.pos.x, this.pos.y, e, bulletDamage, this.arrowSpeed);
         projectiles.push(b);
 
-        // 绘制枪口闪光效果（可选），让发射更明显
+        // Draw muzzle flash effect (optional) to make the shot more visible
         push();
         stroke(255, 255, 0);
         strokeWeight(4);
-        let barrelEnd = createVector(
-            this.pos.x + cos(this.angle) * ts * 0.5,
-            this.pos.y + sin(this.angle) * ts * 0.5
-        );
+        let barrelEnd = createVector(this.pos.x + cos(this.angle) * ts * 0.5, this.pos.y + sin(this.angle) * ts * 0.5);
         line(this.pos.x, this.pos.y, barrelEnd.x, barrelEnd.y);
         pop();
 
@@ -374,12 +333,12 @@ class Hero {  // 创建塔的类
     }
 
 
-    // Adjust angle to point towards pixel position  // 调整角度指向目标
+    // Adjust angle to point towards pixel position
     aim(x, y) {
-        this.angle = atan2(y - this.pos.y, x - this.pos.x);  // 计算角度
+        this.angle = atan2(y - this.pos.y, x - this.pos.x);
     }
 
-    // Deal damage to monster  // 对怪物造成伤害
+    // Deal damage to monster
     attack(e) {
 
         var damage = round(random(this.damageMin, this.damageMax));  // 随机伤害
@@ -390,110 +349,96 @@ class Hero {  // 创建塔的类
         this.onHit(e);  // 对目标进行后续操作
     }
 
-    drawBarrel() {
-        fill(this.secondary);  // 设置填充颜色
-        rect(0, -this.width * ts / 2, this.length * ts, this.width * ts);  // 绘制矩形炮管
-    }
 
-    // Draw base of tower (stationary part)  // 绘制塔基（固定部分）
-    drawBase() {
-        fill(this.color);  // 设置填充颜色
-        ellipse(this.pos.x, this.pos.y, this.radius * ts, this.radius * ts);  // 绘制椭圆形塔基
-    }
-
-    // Returns damage range  // 返回伤害范围
+    // Returns damage range
     getDamage() {
-        return rangeText(this.damageMin, this.damageMax);  // 返回伤害文本
+        return rangeText(this.damageMin, this.damageMax);
     }
 
-    // Returns average cooldown in seconds  // 返回平均冷却时间（秒）
+    // Returns average cooldown in seconds
     getCooldown() {
-        return (this.cooldownMin + this.cooldownMax) / 120;  // 计算冷却时间
+        return (this.cooldownMin + this.cooldownMax) / 120;
     }
 
-    kill() {  // 将塔标记为死亡
+    kill() {  // Mark the tower as dead
         this.alive = false;
     }
 
-    isDead() {  // 检查塔是否死亡
+    isDead() {  // Check if the tower is dead
         return !this.alive;
     }
 
     onHit(e) {
-    }  // 目标被击中时的操作
-
-    // 塔被攻击时加点效果
-    dealDamage(amt, type) { // 处理伤害
+    } // Operation when the target is hit
 
 
-        if (this.health > 0) { // 如果生命值大于 0
-            this.health -= amt; // 计算最终伤害
+    dealDamage(amt, type) {
 
+
+        if (this.health > 0) { // If health is greater than 0
+            this.health -= amt; // Calculate final damage
 
         }
-        if (this.health <= 0) this.kill(); // 如果生命值小于等于 0，调用死亡逻辑
+        if (this.health <= 0) this.kill(); // If health is less than or equal to 0, call death logic
 
 
     }
 
-    resetCooldown() {  // 重置冷却时间
-        var cooldown = round(random(this.cooldownMin, this.cooldownMax));  // 随机生成冷却时间
-        this.cd = cooldown;  // 设置冷却时间
+    resetCooldown() { // Reset Cooldown
+        var cooldown = round(random(this.cooldownMin, this.cooldownMax)); // Randomly generate cooldown
+        this.cd = cooldown; // Set cooldown
         this.cooldown = cooldown;
     }
 
-    resetPowerCoolDown() {  // 重置冷却时间
-        var cooldown = round(random(this.cooldownMin, this.cooldownMax));  // 随机生成冷却时间
-        this.powerCd = cooldown;  // 设置冷却时间
+    resetPowerCoolDown() { // Reset Cooldown
+        var cooldown = round(random(this.cooldownMin, this.cooldownMax)); // Randomly generate cooldown
+        this.powerCd = cooldown; // Set cooldown
         this.powerCoolDown = cooldown;
     }
 
-    // Sell price  // 塔的出售价格
+// Sell price // Tower selling price
     sellPrice() {
-        return floor(this.totalCost * sellConst);  // 返回出售价格
+        return floor(this.totalCost * sellConst); // Return selling price
     }
 
-    // Target correct monster  // 锁定正确的怪物
+// Target correct monster // Target the correct monster
 
-
-    updateCD() {  // 更新cd状态
-        if (this.cd > 0) this.cd--;  // 如果冷却时间大于0，减少冷却时间
+    updateCD() { // Update CD status
+        if (this.cd > 0) this.cd--; // If the cooldown is greater than 0, reduce the cooldown
     }
 
-    updatePowerCD() {  // 更新cd状态
+    updatePowerCD() { // Update cd status
         if (this.powerCd > 0) this.powerCd
-        this.powerCd--;  // 如果冷却时间大于0，减少冷却时间
+        this.powerCd--; // If the cooldown time is greater than 0, reduce the cooldown time
     }
 
-
-    // Use template to set attributes  // 使用模板设置塔的属性
+// Use template to set attributes // Use template to set tower attributes
     upgrade(template) {
-        template = typeof template === 'undefined' ? {} : template;  // 如果没有传入模板，使用空对象
-        var keys = Object.keys(template);  // 获取模板的所有键
+        template = typeof template === 'undefined' ? {} : template; // If no template is passed, use an empty object
+        var keys = Object.keys(template); // Get all keys of the template
         for (var i = 0; i < keys.length; i++) {
-            var key = keys[i];  // 遍历模板键
-            this[key] = template[key];  // 设置属性
+            var key = keys[i]; // Traverse template keys
+            this[key] = template[key]; // Set attributes
         }
-        if (template.cost) this.totalCost += template.cost;  // 如果有成本，增加总成本
+        if (template.cost) this.totalCost += template.cost; // If there is a cost, increase the total cost
     }
 
-    // Returns array of visible entities out of passed array  // 返回可见实体的数组
+    // Returns array of visible entities out of passed array
     visible(entities) {
-        return getInRange(this.pos.x, this.pos.y, this.range, entities);  // 获取在范围内的实体
+        return getInRange(this.pos.x, this.pos.y, this.range, entities); // Get entities in the range
     }
 
-    // 绘制攻击范围
+    // Draw the attack range
     diaplayRange(cx, cy) {
         stroke(255, 237, 102);
         strokeWeight(2);
         fill(this.color[0], this.color[1], this.color[2], 40);
-        //fill(100, 40);
-        // 攻击范围半径
+
         var r = this.range * ts * 2;
         circle(cx, cy, r);
     }
 
-    // 显示剩余cd
+    // Display remaining CD
     displayCD(cx, cy) {
         let cdRatio = this.cd / this.cooldown;
         if (cdRatio < 0.001) return;
@@ -514,8 +459,7 @@ class Hero {  // 创建塔的类
 
     displayPoweCD(cx, cy) {
 
-        // let cdRatio =  this.cooldown/this.cd ;
-        // if (cdRatio >=100) return;
+
         let wt = map(this.powerCd, this.powerCoolDown, 0, 0, 2 * ts / 3);
         if (this.powerCd <= 0) {
             return;
@@ -525,7 +469,7 @@ class Hero {  // 创建塔的类
         fill(100);
         rect(cx - ts / 3, cy + ts / 5, 2 * ts / 3, ts / 5);
 
-        // noStroke();
+
         fill(random(255), random(255), random(255));
         rect(cx - ts / 3, cy + ts / 5, wt, ts / 5);
 
@@ -538,7 +482,7 @@ class Hero {  // 创建塔的类
         let enoughCash = cash > this.upgrades[0].cost;
         let icon = enoughCash ? iconUpgrade : iconUpgradeGrey;
         let scale = 0.2;
-        image(icon, cx, cy, ts * scale, ts * scale); // 移除了浮动效果
+        image(icon, cx, cy, ts * scale, ts * scale); // Removed floating effect
     }
 
 

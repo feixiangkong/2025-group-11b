@@ -1,97 +1,105 @@
-function createEffect(duration, template) { // 创建效果函数
-    var e = new Effect(duration); // 创建新的 Effect 实例
-    // Fill in all keys // 填充所有键值
-    template = typeof template === 'undefined' ? {} : template; // 如果模板未定义，则赋值为空对象
-    var keys = Object.keys(template); // 获取模板对象的所有键
-    for (var i = 0; i < keys.length; i++) { // 遍历所有键
-        var key = keys[i]; // 取出当前键
-        e[key] = template[key]; // 将模板的属性赋值给效果实例
+// Function to create an effect
+function createEffect(duration, template) {
+    var e = new Effect(duration); // Create a new Effect instance
+
+    // Fill in all properties from the template
+    template = typeof template === 'undefined' ? {} : template; // Default to empty object if template is undefined
+    var keys = Object.keys(template); // Get all keys from the template
+
+    // Iterate over all keys and copy properties to the effect instance
+    for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        e[key] = template[key];
     }
-    return e; // 返回创建的效果实例
+
+    return e; // Return the created effect instance
 }
 
+// Object to store all effects
+var effects = {};
 
-var effects = {}; // 存储所有效果的对象
+// Define Slow effect
+effects.slow = {
+    // Display properties
+    color: [68, 108, 179], // Blue color
 
+    // Miscellaneous properties
+    name: 'slow', // Effect name
 
-effects.slow = { // 定义减速效果
-    // Display // 显示属性
-    color: [68, 108, 179], // 颜色（蓝色）
-
-    // Misc // 其他属性
-    name: 'slow', // 效果名称
-
-    // Methods // 方法
-    onEnd: function(e) { // 效果结束时
-        e.speed = this.oldSpeed; // 还原原始速度
+    // Methods
+    onEnd: function(e) { // When effect ends
+        e.speed = this.oldSpeed; // Restore original speed
     },
-    onStart: function(e) { // 效果开始时
-        this.oldSpeed = e.speed; // 记录原始速度
-        this.speed = e.speed / 2; // 速度减半
-        e.speed = this.speed; // 赋值给目标
+    onStart: function(e) { // When effect starts
+        this.oldSpeed = e.speed; // Store original speed
+        this.speed = e.speed / 2; // Halve the speed
+        e.speed = this.speed; // Apply to target
     }
 };
-effects.slow2 = { // 定义减速效果
-    // Display // 显示属性
-    color: [68, 108, 179], // 颜色（蓝色）
 
-    // Misc // 其他属性
-    name: 'slow2', // 效果名称
-    count: 0, // 初始化 count 属性
+// Define Enhanced Slow effect
+effects.slow2 = {
+    // Display properties
+    color: [68, 108, 179], // Blue color
 
-    // Methods // 方法
-    onEnd: function(e) { // 效果结束时
-        e.speed = e.oldSpeed; // 还原原始速度
+    // Miscellaneous properties
+    name: 'slow2', // Effect name
+    count: 0, // Initialize count property
+
+    // Methods
+    onEnd: function(e) { // When effect ends
+        e.speed = e.oldSpeed; // Restore original speed
         // e.isSlow2 = true;
     },
-    onStart: function(e) { // 效果开始时
-
-        // 如果没有应用该减速效果
+    onStart: function(e) { // When effect starts
+        // If the target is not already affected by this slow
         if (e.isSlow2 == false) {
-            e.oldSpeed = e.speed; // 记录原始速度
-            e.isSlow2 = true; // 标记该对象已经处于减速状态
+            e.oldSpeed = e.speed; // Store original speed
+            e.isSlow2 = true; // Mark the target as slowed
         }
 
-        e.count++; // 每次调用 onStart 时，count 增加
+        e.count++; // Increment count each time effect is applied
 
-        // 判断是否达到2000次
+        // Slow progressively based on count
         if (e.count < 10) {
-            e.speed = 0; // 在2000次之前将速度设置为0
+            e.speed = 0; // Freeze target for first 10 applications
         } else {
-            e.speed = e.oldSpeed/2; // 在2000次之前将速度设置为0
+            e.speed = e.oldSpeed / 2; // Then apply regular slow
         }
     }
 };
 
+// Define Poison effect
+effects.poison = {
+    // Display properties
+    color: [102, 204, 26], // Green color
 
-effects.poison = { // 定义中毒效果
-    // Display // 显示属性
-    color: [102, 204, 26], // 颜色（绿色）
+    // Miscellaneous properties
+    name: 'poison', // Effect name
 
-    // Misc // 其他属性
-    name: 'poison', // 效果名称
-
-    // Methods // 方法
-    onTick: function(e) { // 每次更新时
-        e.dealDamage(10, 'poison'); // 造成 1 点毒伤害
+    // Methods
+    onTick: function(e) { // Each update tick
+        e.dealDamage(10, 'poison'); // Deal 10 poison damage
     }
 };
 
-effects.regen = { // 定义生命恢复效果
-    // Display // 显示属性
-    color: [210, 82, 127], // 颜色（粉色）
+// Define Regeneration effect
+effects.regen = {
+    // Display properties
+    color: [210, 82, 127], // Pink color
 
-    // Misc // 其他属性
-    name: 'regen', // 效果名称
+    // Miscellaneous properties
+    name: 'regen', // Effect name
 
-    // Methods // 方法
-    onTick: function(e) { // 每次更新时
-        if (e.health < e.maxHealth && random() < 0.2) e.health++; // 20% 概率恢复 1 点生命值
+    // Methods
+    onTick: function(e) { // Each update tick
+        // 20% chance to regenerate 1 health if not at max
+        if (e.health < e.maxHealth && Math.random() < 0.2) e.health++;
     }
 };
 
-// 麻痹效果
-effects.stun = { 
+// Define Stun effect
+effects.stun = {
     color: [60, 87, 100],
     name: 'stun',
 
@@ -99,13 +107,13 @@ effects.stun = {
         e.speed = this.oldSpeed;
         e.isStunned = false;
     },
-    onStart: function(e) { 
+    onStart: function(e) {
         this.oldSpeed = e.speed;
         this.speed = 0;
         e.speed = this.speed;
         e.isStunned = true;
     },
-    onTick: function (e) {
-        e.createStunnedEffect();
+    onTick: function(e) {
+        e.createStunnedEffect(); // Visual effect for stun
     }
-};
+};    

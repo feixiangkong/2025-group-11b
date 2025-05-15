@@ -1,39 +1,39 @@
-class Effect { // 定义 Effect 类
-    constructor(duration) { // 构造函数，接受持续时间参数
-        // Display // 显示属性
-        this.color = [0, 0, 0]; // 颜色，默认为黑色
+class Effect { // Define the Effect class
+    constructor(duration) { // Constructor that accepts duration parameter
+        // Display properties
+        this.color = [0, 0, 0]; // Color, default is black
 
-        // Misc // 其他属性
-        this.alive = true; // 存活状态，默认为存活
-        this.duration = duration; // 持续时间
-        this.name = 'status'; // 效果名称，默认值为 'status'
-        this.count =0;
+        // Miscellaneous properties
+        this.alive = true; // Alive state, default is alive
+        this.duration = duration; // Duration
+        this.name = 'status'; // Effect name, default value is 'status'
+        this.count = 0;
     }
 
-    isDead() { // 判断效果是否结束
-        return !this.alive; // 返回存活状态的反值
+    isDead() { // Check if the effect has ended
+        return !this.alive; // Return the inverse of the alive state
     }
 
-    kill() { // 终止效果
-        this.alive = false; // 设置存活状态为 false
+    kill() { // Terminate the effect
+        this.alive = false; // Set the alive state to false
     }
 
-    onEnd(e) {} // 效果结束时的回调函数（空函数）
-    onStart(e) {} // 效果开始时的回调函数（空函数）
-    onTick(e) {} // 每次更新时的回调函数（空函数）
+    onEnd(e) {} // Callback function when the effect ends (empty function)
+    onStart(e) {} // Callback function when the effect starts (empty function)
+    onTick(e) {} // Callback function for each update (empty function)
 
-    update(e) { // 更新函数
-        this.onTick(e); // 调用 onTick 方法
-        if (this.duration > 0) this.duration--; // 持续时间递减
-        if (this.duration === 0) { // 当持续时间归零
-            this.onEnd(e); // 调用 onEnd 方法
-            this.kill(); // 终止效果
+    update(e) { // Update function
+        this.onTick(e); // Call the onTick method
+        if (this.duration > 0) this.duration--; // Decrement the duration
+        if (this.duration === 0) { // When the duration reaches zero
+            this.onEnd(e); // Call the onEnd method
+            this.kill(); // Terminate the effect
         }
     }
 }
 
-class UpgradeFX extends Effect{
-    constructor(duration, x, y, ) {
+class UpgradeFX extends Effect {
+    constructor(duration, x, y) {
         super(duration);
         this.xpos = x;
         this.ypos = y;
@@ -45,8 +45,8 @@ class UpgradeFX extends Effect{
         super.update(e);
 
         if (this.frameIdx >= this.frameNum) {
-            this.onEnd(e); // 调用 onEnd 方法
-            this.kill(); // 终止效果
+            this.onEnd(e); // Call the onEnd method
+            this.kill(); // Terminate the effect
         }
 
         let sprites = imgUpgradeShine;
@@ -56,6 +56,6 @@ class UpgradeFX extends Effect{
         imageMode(CENTER);
         image(sprites, this.xpos, this.ypos, ts, ts, frameX, 0, frameWidth, frameHeight);
 
-        if (frameCount % 2 == 0) this.frameIdx++;
+        if (frameCount % 2 === 0) this.frameIdx++;
     }
 }
